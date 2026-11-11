@@ -1,0 +1,105 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { SITE, messengers } from '../data/site';
+import { CITIES, cityUrl } from '../data/cities';
+import { KITCHENS, FURNITURE, itemUrl } from '../data/catalog';
+interface Props { overlay?: boolean }
+const { overlay = false } = Astro.props;
+const path = Astro.url.pathname;
+const NAV = [
+  { href: '/kuhni/', label: 'Кухни' },
+  { href: '/mebel/', label: 'Мебель' },
+  { href: '/konstruktor/', label: 'Конструктор' },
+  { href: '/ceny/', label: 'Цены' },
+  { href: '/proizvodstvo/', label: 'Производство' },
+  { href: '/blog/', label: 'Журнал' },
+  { href: '/kontakty/', label: 'Контакты' },
+];
+---
+<header class:list={['hd', { 'hd--overlay': overlay }]} data-header>
+  <div class="hd-in wrap">
+    <Logo />
+    <nav class="hd-nav" aria-label="Основное меню">
+      {NAV.map((n) => <a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a>)}
+    </nav>
+    <div class="hd-right">
+      <a class="hd-phone num" href={`tel:${SITE.phoneHref}`} data-goal="call">{SITE.phone}</a>
+      <button class="btn btn--accent btn--sm hd-cta" data-lead="Шапка">Замер бесплатно</button>
+      <button class="icon-btn hd-burger" type="button" aria-label="Открыть меню" aria-controls="menu" data-menu-open><Icon name="menu" /></button>
+    </div>
+  </div>
+</header>
+
+<dialog class="menu dark" id="menu" aria-label="Меню">
+  <div class="menu-top wrap">
+    <Logo />
+    <button class="icon-btn" type="button" aria-label="Закрыть меню" data-menu-close><Icon name="close" /></button>
+  </div>
+  <div class="menu-body wrap">
+    <nav class="menu-main" aria-label="Меню">
+      {NAV.map((n, i) => <a href={n.href} style={`--i:${i}`}>{n.label}</a>)}
+    </nav>
+    <div class="menu-cols">
+      <div><p class="eyebrow">Кухни</p><ul>{KITCHENS.map((k) => <li><a href={itemUrl(k)}>{k.name}</a></li>)}</ul></div>
+      <div><p class="eyebrow">Мебель</p><ul>{FURNITURE.map((k) => <li><a href={itemUrl(k)}>{k.name}</a></li>)}</ul></div>
+      <div><p class="eyebrow">Города</p><ul>{CITIES.map((c) => <li><a href={cityUrl(c)}>{c.name}</a></li>)}</ul>
+        <p class="eyebrow" style="margin-top:24px">Связь</p>
+        <ul><li><a class="num" href={`tel:${SITE.phoneHref}`}>{SITE.phone}</a></li>{messengers().map((m) => <li><a href={m.href} target="_blank" rel="noopener">{m.label}</a></li>)}<li class="muted">{SITE.factory.street}</li></ul>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const hd = document.querySelector<HTMLElement>('[data-header]')!;
+  const menu = document.getElementById('menu') as HTMLDialogElement;
+  let last = 0;
+  const onScroll = () => {
+    const y = scrollY;
+    hd.classList.toggle('is-stuck', y > 24);
+    hd.classList.toggle('is-hidden', y > 600 && y > last);
+    last = y;
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  document.querySelector('[data-menu-open]')?.addEventListener('click', () => menu.showModal());
+  menu.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('[data-menu-close], a')) menu.close(); });
+</script>
+
+<style>
+  .hd { position: sticky; top: 0; z-index: 30; height: var(--header-h); background: rgb(242 238 231 / 0.86); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); border-bottom: 1px solid transparent; transition: transform 0.5s var(--ease), background 0.3s, color 0.3s, border-color 0.3s; }
+  .hd.is-stuck { border-color: var(--line); }
+  .hd.is-hidden { transform: translateY(-100%); }
+  .hd--overlay { position: fixed; left: 0; right: 0; }
+  .hd--overlay:not(.is-stuck) { background: transparent; color: var(--on-dark); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .hd--overlay:not(.is-stuck) .icon-btn { border-color: var(--line-dark); }
+  .hd-in { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .hd-nav { display: flex; gap: clamp(14px, 1.8vw, 30px); }
+  .hd-nav a { position: relative; font-size: 15px; text-decoration: none; padding: 6px 0; }
+  .hd-nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform 0.4s var(--ease); }
+  .hd-nav a:hover::after, .hd-nav a[aria-current]::after { transform: scaleX(1); transform-origin: left; }
+  .hd-right { display: flex; align-items: center; gap: 14px; }
+  .hd-phone { font-weight: 500; font-size: 15px; text-decoration: none; white-space: nowrap; }
+  .hd-burger { display: none; }
+  @media (max-width: 1180px) { .hd-nav { display: none; } .hd-burger { display: grid; } }
+  @media (max-width: 760px) { .hd-cta { display: none; } :root { --header-h: 62px; } }
+  @media (max-width: 400px) { .hd-phone { font-size: 13.500px; } .hd-right { gap: 8px; } }
+
+  .menu { border: 0; padding: 0; margin: 0; width: 100vw; max-width: none; height: 100dvh; max-height: none; overflow-y: auto; }
+  .menu[open] { animation: menu-in 0.5s var(--ease); }
+  @keyframes menu-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+  .menu-top { height: var(--header-h); display: flex; align-items: center; justify-content: space-between; }
+  .menu-top .icon-btn { border-color: var(--line-dark); color: var(--on-dark); }
+  .menu-body { display: grid; gap: 40px; padding-block: 24px 60px; }
+  .menu-main { display: grid; gap: 2px; }
+  .menu-main a { font: 500 clamp(36px, 7vw, 68px)/1.08 var(--serif); letter-spacing: -0.02em; text-decoration: none; transition: color 0.2s, padding 0.4s var(--ease); }
+  .menu[open] .menu-main a { animation: menu-item 0.7s var(--ease) both; animation-delay: calc(var(--i) * 45ms + 150ms); }
+  @keyframes menu-item { from { opacity: 0; transform: translateY(30px); } }
+  .menu-main a:hover { color: var(--oak); padding-left: 14px; }
+  .menu-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 28px; }
+  .menu-cols ul { display: grid; gap: 9px; margin-top: 14px; font-size: 15px; }
+  .menu-cols a { text-decoration: none; color: var(--on-dark-2); }
+  .menu-cols a:hover { color: var(--on-dark); }
+  @media (min-width: 900px) { .menu-body { grid-template-columns: 1fr 1.3fr; align-items: start; padding-top: 6vh; } }
+</style>

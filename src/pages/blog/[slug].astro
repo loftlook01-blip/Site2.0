@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Pic from '../../components/Pic.astro';
+import Icon from '../../components/Icon.astro';
+import CtaLead from '../../components/CtaLead.astro';
+import { ARTICLES, articleUrl, fmtDate } from '../../data/articles';
+import { breadcrumbs, article } from '../../lib/schema';
+export const getStaticPaths = () => ARTICLES.map((a) => ({ params: { slug: a.slug }, props: { a } }));
+const { a } = Astro.props;
+const crumbs = [{ name: 'Журнал', url: '/blog/' }, { name: a.title, url: articleUrl(a) }];
+const more = ARTICLES.filter((x) => x.slug !== a.slug).slice(0, 2);
+---
+<Base title={a.title} description={a.description} ogType="article" published={a.date} ogImage={`/images/${a.img}.webp`} schema={[breadcrumbs(crumbs), article(a)]}>
+  <article class="wrap ar">
+    <Crumbs items={crumbs} />
+    <header class="stack" style="gap:20px"><p class="small muted">{fmtDate(a.date)} · {a.minutes} мин чтения</p><h1 class="h-lg" style="max-width:20ch">{a.title}</h1></header>
+    <Pic name={a.img} alt={a.title} ratio="16 / 8" eager viz sizes="100vw" />
+    <div class="prose">
+      <div class="answer"><b>Коротко</b>{a.answer}</div>
+      <Fragment set:html={a.body} />
+      <p><button class="btn btn--accent" data-lead={`Статья: ${a.title}`}>Вызвать замерщика <Icon name="arrow" class="arr" /></button></p>
+    </div>
+  </article>
+  <section class="sec paper"><div class="wrap"><div class="sec-head"><p class="eyebrow">Читайте также</p></div><div class="more">{more.map((x) => <a href={articleUrl(x)}><Pic name={x.img} alt={x.title} ratio="3 / 2" zoom sizes="50vw" /><h3 class="h-md">{x.title}</h3></a>)}</div></div></section>
+  <CtaLead source={`Статья ${a.slug}`} />
+</Base>
+<style>
+  .ar { display: grid; gap: 28px; padding-block: clamp(20px, 3vw, 40px) var(--sec); }
+  .more { display: grid; gap: 28px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .more a { display: grid; gap: 12px; text-decoration: none; }
+  .more a:hover h3 { color: var(--accent); }
+</style>

@@ -1,0 +1,142 @@
+---
+/** Посадочная страница категории: кухня (по стилю / планировке) или корпусная мебель */
+import Base from '../layouts/Base.astro';
+import Crumbs from './Crumbs.astro';
+import Pic from './Pic.astro';
+import Icon from './Icon.astro';
+import ItemCard from './ItemCard.astro';
+import Steps from './Steps.astro';
+import Faq from './Faq.astro';
+import CtaLead from './CtaLead.astro';
+import { SITE, years } from '../data/site';
+import { CITIES, cityUrl } from '../data/cities';
+import { KITCHENS, FURNITURE, itemUrl, priceLabel, type Item } from '../data/catalog';
+import { INCLUDED, FAQ } from '../data/content';
+import { breadcrumbs, faq, product } from '../lib/schema';
+interface Props { item: Item }
+const { item } = Astro.props;
+const P = SITE.promises;
+const isK = item.group !== 'furniture';
+const root = isK ? { name: 'Кухни на заказ', url: '/kuhni/' } : { name: 'Корпусная мебель', url: '/mebel/' };
+const crumbs = [root, { name: item.name, url: itemUrl(item) }];
+const extra = FAQ.filter((f) => ['Цена', 'Сроки'].includes(f.tag)).slice(isK ? 1 : 2, isK ? 4 : 4);
+const faqs = [...item.faq, ...extra];
+const pool = isK ? KITCHENS : FURNITURE;
+const related = pool.filter((k) => k.slug !== item.slug).sort((a, b) => Number(b.group === item.group) - Number(a.group === item.group)).slice(0, 4);
+const title = `${item.title} в Архангельске`;
+const description = `${item.h1} в Архангельске, Северодвинске и Новодвинске: ${priceLabel(item)}. ${item.lead} Замер и 3D-проект бесплатно, гарантия ${years(P.guaranteeMonths)}.`;
+---
+<Base title={title} description={description.slice(0, 300)} schema={[breadcrumbs(crumbs), product(item), faq(faqs)]} preload={item.img}>
+  <section class="ip-head">
+    <div class="wrap ip-grid">
+      <div class="stack ip-text">
+        <Crumbs items={crumbs} />
+        <h1 class="h-lg split"><span class="ln"><span>{item.h1}</span></span><span class="ln" style="--i:1"><span><em>в Архангельске</em></span></span></h1>
+        <p class="lead reveal">{item.lead}</p>
+        <div class="ip-price reveal" style="--i:1">
+          <p><span class="small muted">Стоимость</span><b class="num">{priceLabel(item)}</b></p>
+          <p><span class="small muted">Срок</span><b class="num">{isK ? `${P.productionDaysFrom}–${P.productionDaysTo} дней` : item.spec[0][1]}</b></p>
+          <p><span class="small muted">Гарантия</span><b class="num">{years(P.guaranteeMonths)}</b></p>
+        </div>
+        <div class="row reveal" style="--i:2">
+          {isK ? <a class="btn btn--accent" href="/konstruktor/">Рассчитать стоимость <Icon name="arrow" class="arr" /></a> : <button class="btn btn--accent" data-lead={item.name} data-lead-title="Рассчитать стоимость" data-lead-extra={item.name}>Рассчитать стоимость <Icon name="arrow" class="arr" /></button>}
+          <button class="btn btn--ghost" data-lead={item.name} data-lead-extra={item.name}>Вызвать замерщика</button>
+        </div>
+      </div>
+      <Pic name={item.img} alt={`${item.h1} — пример проекта, ${SITE.brand}`} ratio="4 / 3" eager viz reveal sizes="(max-width: 960px) 100vw, 55vw" class="ip-pic" />
+    </div>
+  </section>
+
+  <section class="sec--tight sec">
+    <div class="wrap ip-answer">
+      <div class="answer reveal"><b>Коротко</b>{item.answer}</div>
+      <ul class="ip-cities">
+        {CITIES.map((c) => <li><a class="chip" href={cityUrl(c)}>{c.name} · {c.km ? `${c.km} км, доставка 0 ₽` : 'производство'}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Что важно</p><h2 class="h-lg">{isK ? 'Из чего складывается' : 'Как мы делаем'} <em>{item.name.toLowerCase()}</em></h2></div>
+      <ul class="pts">
+        {item.points.map((p, i) => <li class="reveal" style={`--i:${i}`}><span class="num pts-n">{String(i + 1).padStart(2, '0')}</span><h3 class="h-md">{p.t}</h3><p>{p.d}</p></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap ip-spec">
+      <div class="stack">
+        <p class="eyebrow">Характеристики</p>
+        <h2 class="h-lg">Материалы <em>и параметры</em></h2>
+        <dl class="spec">
+          {item.spec.map(([k, v]) => <div class="reveal"><dt>{k}</dt><dd>{v}</dd></div>)}
+          <div class="reveal"><dt>Стоимость</dt><dd class="num">{priceLabel(item)}</dd></div>
+        </dl>
+        <a class="link" href="/materialy/" style="justify-self:start">Справочник материалов <Icon name="arrow" /></a>
+      </div>
+      <div class="stack inc">
+        <p class="eyebrow">Входит в цену</p>
+        <ul>{INCLUDED.map((x) => <li class="reveal"><Icon name="check" /><div><b>{x.t}</b><span class="small muted">{x.d}</span></div></li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Этапы</p><h2 class="h-lg">От заявки <em>до монтажа</em></h2></div><p class="lead">Цена, срок и комплектация фиксируются в договоре. Предоплата {P.prepayPct}%, остаток — после монтажа.</p></div>
+      <Steps />
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">{item.name}: <em>частые вопросы</em></h2></div>
+      <Faq items={faqs} />
+    </div>
+  </section>
+
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Смотрите также</p><h2 class="h-lg">{isK ? 'Другие кухни' : 'Другая мебель'}</h2></div><a class="link" href={root.url} style="justify-self:start">{isK ? 'Весь каталог кухонь' : 'Вся мебель'} <Icon name="arrow" /></a></div>
+      <div class="rel">{related.map((k, i) => <ItemCard item={k} i={i} ratio="4 / 3" />)}</div>
+    </div>
+  </section>
+
+  <CtaLead source={`${item.name} — форма`} img={item.img} />
+</Base>
+
+<style>
+  .ip-head { padding-block: clamp(20px, 3vw, 40px) clamp(32px, 5vw, 72px); }
+  .ip-grid { display: grid; gap: clamp(24px, 4vw, 56px); align-items: center; }
+  @media (min-width: 960px) { .ip-grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); } }
+  .ip-text { gap: 22px; }
+  .ip-text h1 { font-size: clamp(38px, 5vw, 78px); }
+  .ip-price { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0 clamp(20px, 3vw, 44px); padding-block: 18px; border-block: 1px solid var(--line); }
+  .ip-price p { display: grid; gap: 4px; }
+  .ip-price b { font: 500 clamp(19px, 1.9vw, 26px)/1.1 var(--serif); }
+  .ip-answer { display: grid; gap: 20px; max-width: 980px; margin-inline: auto; }
+  .ip-cities { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 clamp(24px, 3vw, 48px); }
+  .pts li { display: grid; gap: 10px; align-content: start; padding: 26px 0 30px; border-top: 1px solid var(--line); }
+  .pts-n { font-size: 12px; color: var(--accent); }
+  .pts h3 { font-size: clamp(24px, 2.2vw, 32px); }
+  .pts p { color: var(--ink-2); max-width: 46ch; }
+  .ip-spec { display: grid; gap: clamp(32px, 5vw, 80px); }
+  @media (min-width: 960px) { .ip-spec { grid-template-columns: 1.2fr 1fr; } }
+  .spec { margin-top: 12px; border-top: 1px solid var(--line); }
+  .spec > div { display: grid; grid-template-columns: minmax(120px, 0.6fr) 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .spec dt { color: var(--muted); font-size: 15px; }
+  .spec dd { font-weight: 500; }
+  .inc { padding: clamp(22px, 3vw, 36px); background: var(--ink); color: var(--bg); border-radius: var(--r-lg); align-self: start; }
+  .inc .eyebrow { color: var(--oak); }
+  .inc ul { display: grid; gap: 18px; margin-top: 8px; }
+  .inc li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; }
+  .inc :global(svg) { width: 20px; height: 20px; color: var(--oak); margin-top: 3px; }
+  .inc li div { display: grid; gap: 2px; }
+  .inc b { font-weight: 500; }
+  .inc .muted { color: var(--on-dark-2); }
+  .rel { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 28px clamp(12px, 1.6vw, 24px); }
+  @media (max-width: 620px) { .rel { grid-template-columns: 1fr 1fr; } .ip-price { grid-template-columns: 1fr 1fr; gap: 14px 20px; } }
+</style>

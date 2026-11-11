@@ -1,0 +1,99 @@
+---
+/** Гео-посадочные: «Кухни на заказ в <городе>» — уникальный текст про жильё, логистику и условия для города */
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import Pic from '../components/Pic.astro';
+import Icon from '../components/Icon.astro';
+import ItemCard from '../components/ItemCard.astro';
+import Steps from '../components/Steps.astro';
+import Faq from '../components/Faq.astro';
+import CityMap from '../components/CityMap.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { SITE, years } from '../data/site';
+import { OTHER_CITIES, cityUrl, type City } from '../data/cities';
+import { KITCHENS, FURNITURE, itemUrl } from '../data/catalog';
+import { FAQ, PRICE_ROWS } from '../data/content';
+import { breadcrumbs, faq, cityService } from '../lib/schema';
+export const getStaticPaths = () => OTHER_CITIES.map((city) => ({ params: { city: city.slug }, props: { city } }));
+const { city } = Astro.props as { city: City };
+const P = SITE.promises;
+const crumbs = [{ name: `Кухни ${city.in}`, url: cityUrl(city) }];
+const min = Math.min(...KITCHENS.map((k) => k.from));
+const faqs = [...city.faq, ...FAQ.filter((f) => f.tag === 'Цена').slice(0, 2).map((f) => ({ q: f.q.replace('в Архангельске', city.in), a: f.a }))];
+---
+<Base city={city} title={`Кухни на заказ ${city.in} от производителя — ${SITE.brand}`} description={`Кухни и корпусная мебель на заказ ${city.in}: от ${min.toLocaleString('ru-RU')} ₽ за п. м. Производство в Архангельске — ${city.km} км, ${city.drive} в пути. Замер, доставка и монтаж бесплатно, гарантия ${years(P.guaranteeMonths)}.`} schema={[breadcrumbs(crumbs), cityService(city, min), faq(faqs)]} preload="k-corner">
+  <section class="ch">
+    <div class="wrap ch-grid">
+      <div class="stack" style="gap:22px">
+        <Crumbs items={crumbs} />
+        <h1 class="h-lg split"><span class="ln"><span>Кухни на заказ</span></span><span class="ln" style="--i:1"><span><em>{city.in}</em></span></span></h1>
+        <p class="lead reveal">{city.lead}</p>
+        <dl class="ch-facts reveal" style="--i:1">
+          <div><dt>От производства</dt><dd class="num">{city.km} км · {city.drive}</dd></div>
+          <div><dt>Доставка и монтаж</dt><dd>{city.delivery ? `${city.delivery} ₽` : 'Бесплатно'}</dd></div>
+          <div><dt>Замер</dt><dd>{city.measure}</dd></div>
+          <div><dt>Цена</dt><dd class="num">от {min.toLocaleString('ru-RU')} ₽ / п. м</dd></div>
+        </dl>
+        <div class="row reveal" style="--i:2">
+          <button class="btn btn--accent" data-lead={`${city.name} — первый экран`} data-lead-city={city.name}>Вызвать замерщика {city.to} <Icon name="arrow" class="arr" /></button>
+          <a class="btn btn--ghost" href="/konstruktor/">Рассчитать стоимость</a>
+        </div>
+      </div>
+      <Pic name="k-corner" alt={`Кухня на заказ ${city.in} — пример проекта`} ratio="4 / 3" eager viz reveal sizes="(max-width: 960px) 100vw, 55vw" />
+    </div>
+  </section>
+
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Жильё {city.gen}</p><h2 class="h-lg">Проектируем под <em>ваш дом</em></h2></div><p class="lead">Типовые серии мы знаем по размерам: где проходит вентиляционный короб, какой высоты потолок и куда обычно выведена вода.</p></div>
+      <ul class="hs">{city.housing.map((h, i) => <li class="reveal" style={`--i:${i}`}><span class="num">{String(i + 1).padStart(2, '0')}</span><h3 class="h-md">{h.title}</h3><p>{h.text}</p></li>)}</ul>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Каталог</p><h2 class="h-lg">Кухни для {city.gen}</h2></div><a class="link" href="/kuhni/" style="justify-self:start">Весь каталог <Icon name="arrow" /></a></div>
+      <div class="grid">{KITCHENS.slice(0, 8).map((k, i) => <ItemCard item={k} i={i} ratio="4 / 3" />)}</div>
+      <p class="small muted" style="margin-top:28px">Также делаем: {FURNITURE.map((f, i) => <><a href={itemUrl(f)}>{f.name.toLowerCase()}</a>{i < FURNITURE.length - 1 ? ', ' : '.'}</>)}</p>
+    </div>
+  </section>
+
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Цены {city.in}</p><h2 class="h-lg">Те же, что <em>в Архангельске</em></h2></div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Позиция</th><th>Что входит</th><th>Цена</th></tr></thead>
+        <tbody>{PRICE_ROWS.slice(0, 8).map((r) => <tr><td><b>{r.name}</b></td><td class="muted">{r.what}</td><td class="num nowrap">от {r.from.toLocaleString('ru-RU')} ₽ / {r.unit}</td></tr>)}</tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:16px">{city.logistics} <a href="/ceny/">Полный прайс</a></p>
+    </div>
+  </section>
+
+  <section class="sec dark">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Логистика</p><h2 class="h-lg">{city.km} км — <em>{city.drive}</em></h2></div><p class="lead">{city.logistics} Районы: {city.districts.join(', ')}.</p></div>
+      <CityMap />
+    </div>
+  </section>
+
+  <section class="sec"><div class="wrap"><div class="sec-head"><p class="eyebrow">Этапы</p><h2 class="h-lg">Как заказать кухню <em>{city.in}</em></h2></div><Steps /></div></section>
+  <section class="sec paper"><div class="wrap"><div class="sec-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">Спрашивают <em>из {city.gen}</em></h2></div><Faq items={faqs} /></div></section>
+  <CtaLead source={`${city.name} — форма`} title={`Замер ${city.in} — <em>бесплатно</em>`} />
+</Base>
+<style>
+  .ch { padding-block: clamp(20px, 3vw, 40px) clamp(32px, 5vw, 72px); }
+  .ch-grid { display: grid; gap: clamp(24px, 4vw, 56px); align-items: center; }
+  @media (min-width: 960px) { .ch-grid { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); } }
+  .ch h1 { font-size: clamp(38px, 5vw, 78px); }
+  .ch-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; border-top: 1px solid var(--line); }
+  .ch-facts div { display: grid; gap: 3px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .ch-facts dt { font-size: 13px; color: var(--muted); }
+  .ch-facts dd { font-weight: 500; }
+  .hs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 0 clamp(24px, 3vw, 48px); }
+  .hs li { display: grid; gap: 10px; align-content: start; padding: 26px 0 30px; border-top: 1px solid var(--line); }
+  .hs .num { font-size: 12px; color: var(--accent); }
+  .hs h3 { font-size: clamp(24px, 2.2vw, 32px); }
+  .hs p { color: var(--ink-2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: clamp(24px, 3vw, 40px) clamp(12px, 1.6vw, 24px); }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr 1fr; } .ch-facts { grid-template-columns: 1fr; } }
+</style>

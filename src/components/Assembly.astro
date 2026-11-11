@@ -1,0 +1,81 @@
+---
+/** Motion-секция: кухня «собирается» из модулей по мере прокрутки. Прогресс --p задаёт SiteWidgets. */
+import KitchenSvg from './KitchenSvg.astro';
+const S = [
+  { t: 'Колонны и корпус', d: 'ЛДСП Egger и Kronospan 18 мм. Кромка 2 мм по всему периметру детали, включая торцы, которых не видно.' },
+  { t: 'Нижние модули', d: 'Ящики полного выдвижения с доводчиками выдерживают до 40 кг. Ширина модуля — любая, с шагом 1 мм.' },
+  { t: 'Столешница', d: 'Подрезаем по стене на месте: зазора не будет, даже если угол комнаты далёк от 90°.' },
+  { t: 'Верхние шкафы', d: 'Навешиваем на регулируемую шину — горизонт выставляется лазером, фасады сходятся в одну линию.' },
+  { t: 'Антресоли и свет', d: 'Второй ярус до потолка прячет воздуховод. Светодиодный профиль врезан в дно шкафов.' },
+];
+---
+<section class="asm dark" data-scrub data-steps={S.length} data-step="0">
+  <div class="asm-sticky">
+    <div class="wrap asm-grid">
+      <div class="asm-text">
+        <p class="eyebrow">Как устроена кухня</p>
+        <h2 class="h-lg">Собираем <em>по модулям</em> —<br />вы видите, за что платите</h2>
+        <ol class="asm-steps">
+          {S.map((s, i) => (
+            <li data-i={i}><span class="num">{String(i + 1).padStart(2, '0')}</span><div><h3 class="h-sm">{s.t}</h3><p class="small">{s.d}</p></div></li>
+          ))}
+        </ol>
+      </div>
+      <div class="asm-stage">
+        <KitchenSvg id="asm" />
+        <div class="asm-bar" aria-hidden="true"><i></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .asm { height: 420vh; --p: 0; }
+  .asm-sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; align-items: center; overflow: hidden; }
+  .asm-grid { display: grid; gap: 24px; align-items: center; }
+  @media (min-width: 960px) { .asm-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 56px; } }
+  .asm-text { display: grid; gap: 20px; }
+  .asm-steps { display: grid; gap: 0; margin-top: 8px; }
+  .asm-steps li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line-dark); opacity: 0.34; transition: opacity 0.4s; }
+  .asm-steps li > .num { font-size: 12px; padding-top: 4px; color: var(--oak); }
+  .asm-steps p { color: var(--on-dark-2); display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.5s var(--ease), margin 0.5s var(--ease); overflow: hidden; }
+  .asm-steps p { max-height: 0; transition: max-height 0.5s var(--ease), margin 0.5s; }
+  .asm[data-step='0'] li[data-i='0'], .asm[data-step='1'] li[data-i='1'], .asm[data-step='2'] li[data-i='2'], .asm[data-step='3'] li[data-i='3'], .asm[data-step='4'] li[data-i='4'] { opacity: 1; }
+  .asm[data-step='0'] li[data-i='0'] p, .asm[data-step='1'] li[data-i='1'] p, .asm[data-step='2'] li[data-i='2'] p, .asm[data-step='3'] li[data-i='3'] p, .asm[data-step='4'] li[data-i='4'] p { max-height: 90px; margin-top: 6px; }
+  .asm-stage { position: relative; }
+  .asm-bar { height: 1px; background: var(--line-dark); margin-top: 18px; }
+  .asm-bar i { display: block; height: 100%; background: var(--oak); transform-origin: left; transform: scaleX(var(--p)); }
+
+  .asm :global(.ksvg) { --kw: #22231f; --kf: #b9b0a2; --kt: #ece7dd; border-radius: var(--r-lg); }
+  .asm :global(.ksvg *) { transition: none !important; }
+  .asm :global(.k-floor) { fill: #191a17; }
+  .asm :global(.k-splash) { opacity: clamp(0, calc((var(--p) - 0.34) / 0.1), 1); }
+  .asm :global(.k-splash-base) { fill: #2c2d29; }
+  .asm :global(.k-tall .k-part) { --t: clamp(0, calc((var(--p) - 0.02 - var(--d) * 0.06) / 0.12), 1); opacity: var(--t); transform: translateX(calc((1 - var(--t)) * -120px)); }
+  .asm :global(.k-tall .k-plinth), .asm :global(.k-base .k-plinth) { opacity: clamp(0, calc((var(--p) - 0.3) / 0.06), 1); }
+  .asm :global(.k-base .k-part) { --t: clamp(0, calc((var(--p) - 0.2 - var(--d) * 0.035) / 0.1), 1); opacity: var(--t); transform: translateY(calc((1 - var(--t)) * 90px)); }
+  .asm :global(.k-top) { --t: clamp(0, calc((var(--p) - 0.42) / 0.12), 1); opacity: var(--t); transform: translateY(calc((1 - var(--t)) * -70px)); }
+  .asm :global(.k-wall .k-part) { --t: clamp(0, calc((var(--p) - 0.58 - var(--d) * 0.035) / 0.1), 1); opacity: var(--t); transform: translateY(calc((1 - var(--t)) * -90px)); }
+  .asm :global(.k-shade) { opacity: clamp(0, calc((var(--p) - 0.74) / 0.05), 1); }
+  .asm :global(.k-ceil) { opacity: 1; transform: none; }
+  .asm :global(.k-ceil .k-part) { --t: clamp(0, calc((var(--p) - 0.78 - var(--d) * 0.02) / 0.08), 1); opacity: var(--t); transform: translateY(calc((1 - var(--t)) * -60px)); }
+  .asm :global(.k-light) { opacity: clamp(0, calc((var(--p) - 0.92) / 0.06), 1); }
+  .asm :global(.k-h) { opacity: clamp(0, calc((var(--p) - 0.9) / 0.05), 1); }
+
+  @media (max-width: 959px) {
+    .asm { height: 380vh; }
+    .asm-sticky { align-items: start; padding-top: calc(var(--header-h) + 8px); }
+    .asm-text { order: 2; gap: 10px; }
+    .asm-text .h-lg { font-size: 30px; }
+    .asm-text .eyebrow { display: none; }
+    .asm-steps li { display: none; border: 0; padding: 0; }
+    .asm[data-step='0'] li[data-i='0'], .asm[data-step='1'] li[data-i='1'], .asm[data-step='2'] li[data-i='2'], .asm[data-step='3'] li[data-i='3'], .asm[data-step='4'] li[data-i='4'] { display: grid; animation: asm-in 0.5s var(--ease); }
+    @keyframes asm-in { from { opacity: 0; transform: translateY(12px); } }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .asm { height: auto; padding-block: var(--sec); }
+    .asm-sticky { position: static; height: auto; }
+    .asm-steps li { opacity: 1 !important; display: grid !important; }
+    .asm-steps p { max-height: none !important; margin-top: 6px; }
+  }
+</style>

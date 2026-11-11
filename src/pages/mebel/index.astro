@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import ItemCard from '../../components/ItemCard.astro';
+import Steps from '../../components/Steps.astro';
+import CtaLead from '../../components/CtaLead.astro';
+import { SITE, years } from '../../data/site';
+import { FURNITURE } from '../../data/catalog';
+import { breadcrumbs, itemList } from '../../lib/schema';
+const crumbs = [{ name: 'Корпусная мебель', url: '/mebel/' }];
+---
+<Base title="Корпусная мебель на заказ в Архангельске — шкафы, гардеробные, прихожие" description={`Корпусная мебель на заказ в Архангельске, Северодвинске и Новодвинске: шкафы-купе, гардеробные, прихожие, мебель для ванной, детские, гостиные. Собственное производство, гарантия ${years(SITE.promises.guaranteeMonths)}.`} schema={[breadcrumbs(crumbs), itemList(FURNITURE, 'Корпусная мебель на заказ')]}>
+  <PageHead crumbs={crumbs} eyebrow="Корпусная мебель" title="Мебель на заказ <em>для всей квартиры</em>" lead="Те же станки, материалы и гарантия, что и для кухонь. Если заказываете вместе с кухней — один замер, один проект, одна доставка." />
+  <section class="sec--tight sec paper"><div class="wrap"><div class="grid">{FURNITURE.map((k, i) => <ItemCard item={k} i={i} ratio="4 / 3" />)}</div></div></section>
+  <section class="sec"><div class="wrap"><div class="sec-head"><p class="eyebrow">Этапы</p><h2 class="h-lg">Как проходит <em>заказ</em></h2></div><Steps /></div></section>
+  <CtaLead source="Мебель — форма" img="f-living" />
+</Base>
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: clamp(28px, 3vw, 48px) clamp(12px, 1.6vw, 24px); }
+</style>

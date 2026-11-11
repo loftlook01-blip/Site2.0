@@ -1,0 +1,21 @@
+---
+import { COMPARE } from '../data/content';
+---
+<div class="table-scroll">
+  <table class="cmp">
+    <thead><tr><th></th>{COMPARE.cols.map((c, i) => <th class:list={{ us: i === 0 }}>{c}</th>)}</tr></thead>
+    <tbody>
+      {COMPARE.rows.map((r) => <tr class="reveal"><th scope="row">{r[0]}</th>{r.slice(1).map((c, i) => <td class:list={{ us: i === 0 }}>{c}</td>)}</tr>)}
+    </tbody>
+  </table>
+</div>
+<style>
+  .cmp { min-width: 760px; }
+  .cmp th, .cmp td { padding: 20px 20px; }
+  .cmp thead th { font: 500 clamp(19px, 1.7vw, 24px)/1.15 var(--serif); letter-spacing: 0; text-transform: none; color: inherit; vertical-align: bottom; }
+  .cmp tbody th { padding-left: 0; white-space: nowrap; }
+  .cmp .us { background: var(--ink); color: var(--bg); border-color: rgb(242 238 231 / 0.14); font-weight: 500; }
+  .cmp thead .us { border-radius: var(--r-lg) var(--r-lg) 0 0; color: var(--oak); }
+  .cmp tbody tr:last-child .us { border-radius: 0 0 var(--r-lg) var(--r-lg); border-bottom: 0; }
+  .cmp td:not(.us) { color: var(--ink-2); }
+</style>

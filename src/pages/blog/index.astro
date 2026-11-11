@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import Pic from '../../components/Pic.astro';
+import { ARTICLES, articleUrl, fmtDate } from '../../data/articles';
+import { breadcrumbs } from '../../lib/schema';
+const crumbs = [{ name: 'Журнал', url: '/blog/' }];
+const list = [...ARTICLES].sort((a, b) => b.date.localeCompare(a.date));
+---
+<Base title="Журнал: как выбрать и заказать кухню — статьи производителя" description="Статьи о кухнях на заказ: сколько стоит, какие фасады и столешницы выбрать, как подготовиться к замеру, как обустроить маленькую кухню." schema={[breadcrumbs(crumbs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Журнал" title="Перед тем как <em>заказать</em>" lead="Практичные разборы от тех, кто делает кухни каждый день: цены, материалы, планировки." />
+  <section class="sec--tight sec"><div class="wrap bl">{list.map((a, i) => (
+    <a class="bl-i reveal" href={articleUrl(a)} style={`--i:${i % 3}`}><Pic name={a.img} alt={a.title} ratio="3 / 2" zoom sizes="(max-width: 760px) 100vw, 33vw" /><p class="small muted">{fmtDate(a.date)} · {a.minutes} мин</p><h2 class="h-md">{a.title}</h2><p class="small muted">{a.description}</p></a>
+  ))}</div></section>
+</Base>
+<style>
+  .bl { display: grid; gap: 40px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .bl-i { display: grid; gap: 10px; text-decoration: none; align-content: start; }
+  .bl-i h2 { transition: color 0.2s; }
+  .bl-i:hover h2 { color: var(--accent); }
+</style>

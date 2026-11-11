@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import ItemCard from '../../components/ItemCard.astro';
+import Icon from '../../components/Icon.astro';
+import Faq from '../../components/Faq.astro';
+import CtaLead from '../../components/CtaLead.astro';
+import { SITE, years } from '../../data/site';
+import { KITCHENS } from '../../data/catalog';
+import { FAQ, INCLUDED } from '../../data/content';
+import { breadcrumbs, itemList, faq } from '../../lib/schema';
+const crumbs = [{ name: 'Кухни на заказ', url: '/kuhni/' }];
+const styles = KITCHENS.filter((k) => k.group === 'style');
+const layouts = KITCHENS.filter((k) => k.group === 'layout');
+const min = Math.min(...KITCHENS.map((k) => k.from));
+const faqs = FAQ.filter((f) => ['Цена', 'Сроки'].includes(f.tag));
+---
+<Base title="Кухни на заказ в Архангельске — каталог, цены от производителя" description={`Каталог кухонь на заказ: современные, без ручек, неоклассика, скандинавские, лофт; угловые, прямые, с островом. От ${min.toLocaleString('ru-RU')} ₽ за п. м. Производство в Архангельске, гарантия ${years(SITE.promises.guaranteeMonths)}.`} schema={[breadcrumbs(crumbs), itemList(KITCHENS, 'Кухни на заказ в Архангельске'), faq(faqs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Каталог" title="Кухни на заказ <em>по вашим размерам</em>" lead={`Каждая кухня проектируется под конкретное помещение: модули любой ширины с шагом 1 мм. Ниже — стили и планировки как отправная точка. Цены — от ${min.toLocaleString('ru-RU')} ₽ за погонный метр.`}>
+    <div class="row"><a class="btn btn--accent" href="/konstruktor/">Собрать кухню в конструкторе <Icon name="arrow" class="arr" /></a><a class="btn btn--ghost" href="/ceny/">Все цены</a></div>
+  </PageHead>
+  <section class="sec--tight sec paper">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">По стилю</p><h2 class="h-lg">Стили</h2></div>
+      <div class="grid">{styles.map((k, i) => <ItemCard item={k} i={i} ratio="4 / 3" />)}</div>
+    </div>
+  </section>
+  <section class="sec paper" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">По планировке</p><h2 class="h-lg">Планировки</h2></div>
+      <div class="grid">{layouts.map((k, i) => <ItemCard item={k} i={i} ratio="4 / 3" />)}</div>
+    </div>
+  </section>
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Входит в цену</p><h2 class="h-lg">Не только <em>шкафы</em></h2></div>
+      <ul class="inc">{INCLUDED.map((x, i) => <li class="reveal" style={`--i:${i}`}><span class="num">{String(i + 1).padStart(2, '0')}</span><h3 class="h-sm">{x.t}</h3><p class="small muted">{x.d}</p></li>)}</ul>
+    </div>
+  </section>
+  <section class="sec paper"><div class="wrap"><div class="sec-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">Цены <em>и сроки</em></h2></div><Faq items={faqs} /></div></section>
+  <CtaLead source="Каталог кухонь — форма" />
+</Base>
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: clamp(28px, 3vw, 48px) clamp(12px, 1.6vw, 24px); }
+  .inc { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 28px; }
+  .inc li { display: grid; gap: 8px; align-content: start; padding: 22px 0; border-top: 1px solid var(--line); }
+  .inc .num { font-size: 12px; color: var(--accent); }
+</style>

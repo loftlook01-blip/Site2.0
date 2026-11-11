@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Configurator from '../components/Configurator.astro';
+import Faq from '../components/Faq.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { FAQ } from '../data/content';
+import { breadcrumbs, faq } from '../lib/schema';
+const crumbs = [{ name: 'Конструктор кухни', url: '/konstruktor/' }];
+const faqs = FAQ.filter((f) => f.tag === 'Цена');
+---
+<Base title="Конструктор кухни и расчёт стоимости онлайн — Архангельск" description="Соберите кухню онлайн: планировка, длина, фасады, цвет, столешница, фурнитура. Ориентировочная стоимость за 1 минуту. Производство в Архангельске, Северодвинске и Новодвинске." schema={[breadcrumbs(crumbs), faq(faqs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Конструктор" title="Соберите кухню <em>и узнайте цену</em>" lead="Схема и стоимость меняются сразу. Это ориентир с вилкой ±8%: точная цена фиксируется в договоре после бесплатного замера. Расчётом можно поделиться ссылкой." />
+  <section class="sec--tight sec"><div class="wrap"><Configurator /></div></section>
+  <section class="sec paper"><div class="wrap"><div class="sec-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">Как считается <em>цена</em></h2></div><Faq items={faqs} /></div></section>
+  <CtaLead source="Конструктор — форма" />
+</Base>

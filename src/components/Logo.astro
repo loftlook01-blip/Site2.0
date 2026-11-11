@@ -1,0 +1,15 @@
+---
+import { SITE } from '../data/site';
+---
+<a class="logo" href="/" aria-label={`${SITE.brand} — ${SITE.brandSub}, на главную`}>
+  <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 13.500c3-2.800 6-2.800 9 0s6 2.800 9 0M7 19.500c3-2.800 6-2.800 9 0s6 2.800 9 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  <span class="logo-text"><b>{SITE.brand}</b><i>{SITE.brandSub}</i></span>
+</a>
+<style>
+  .logo { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+  .logo-mark { width: 34px; height: 34px; flex: none; }
+  .logo-text { display: grid; line-height: 1; }
+  .logo-text b { font: 600 19px/1 var(--sans); letter-spacing: 0.2em; }
+  .logo-text i { font: 400 10.500px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.62; margin-top: 5px; font-style: normal; }
+  @media (max-width: 420px) { .logo-text i { display: none; } }
+</style>

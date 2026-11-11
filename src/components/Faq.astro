@@ -1,0 +1,30 @@
+---
+interface Props { items: { q: string; a: string }[] }
+const { items } = Astro.props;
+---
+<div class="faq">
+  {items.map((f, i) => (
+    <details class="faq-i reveal" style={`--i:${Math.min(i, 6)}`} name="faq">
+      <summary><span class="faq-n num">{String(i + 1).padStart(2, '0')}</span><h3>{f.q}</h3><span class="faq-x" aria-hidden="true"></span></summary>
+      <div class="faq-a"><p>{f.a}</p></div>
+    </details>
+  ))}
+</div>
+<style>
+  .faq { border-top: 1px solid var(--line); }
+  .faq-i { border-bottom: 1px solid var(--line); }
+  summary { display: grid; grid-template-columns: 44px 1fr 28px; align-items: center; gap: 12px; padding: 24px 0; cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .faq-n { font-size: 13px; color: var(--muted); }
+  h3 { font: 500 clamp(18px, 1.7vw, 23px)/1.3 var(--sans); letter-spacing: -0.01em; transition: color 0.2s; }
+  summary:hover h3 { color: var(--accent); }
+  .faq-x { position: relative; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 50%; transition: transform 0.4s var(--ease), background 0.2s; }
+  .faq-x::before, .faq-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 1px; background: currentColor; transform: translate(-50%, -50%); }
+  .faq-x::after { transform: translate(-50%, -50%) rotate(90deg); transition: transform 0.4s var(--ease); }
+  details[open] .faq-x { transform: rotate(180deg); background: var(--ink); color: var(--bg); }
+  details[open] .faq-x::after { transform: translate(-50%, -50%) rotate(0); }
+  .faq-a { padding: 0 40px 28px 56px; color: var(--ink-2); max-width: 860px; }
+  details::details-content { block-size: 0; overflow: clip; transition: block-size 0.45s var(--ease), content-visibility 0.45s allow-discrete; interpolate-size: allow-keywords; }
+  details[open]::details-content { block-size: auto; }
+  @media (max-width: 600px) { summary { grid-template-columns: 1fr 28px; } .faq-n { display: none; } .faq-a { padding: 0 0 24px; } }
+</style>

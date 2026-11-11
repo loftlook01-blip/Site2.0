@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Faq from '../components/Faq.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { FAQ } from '../data/content';
+import { breadcrumbs, faq } from '../lib/schema';
+const crumbs = [{ name: 'Вопросы и ответы', url: '/voprosy/' }];
+const tags = [...new Set(FAQ.map((f) => f.tag))];
+---
+<Base title="Вопросы и ответы про кухни на заказ — цены, сроки, гарантия" description="Ответы на частые вопросы о заказе кухни в Архангельске: сколько стоит, за сколько делают, что входит в цену, какая гарантия, как проходит замер." schema={[breadcrumbs(crumbs), faq(FAQ)]}>
+  <PageHead crumbs={crumbs} eyebrow="FAQ" title="Вопросы <em>и ответы</em>" lead="Всё, что спрашивают до замера. Не нашли своё — позвоните или напишите, ответим в рабочее время." />
+  <section class="sec--tight sec"><div class="wrap">
+    {tags.map((t) => (<div class="grp"><h2 class="h-md">{t}</h2><Faq items={FAQ.filter((f) => f.tag === t)} /></div>))}
+  </div></section>
+  <CtaLead source="Вопросы — форма" />
+</Base>
+<style>.grp { display: grid; gap: 20px; margin-bottom: clamp(40px, 6vw, 80px); }</style>

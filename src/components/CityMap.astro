@@ -1,0 +1,67 @@
+---
+/** Схема зоны выезда: производство и города. Не географическая карта — схема расстояний. */
+import { CITIES, NEARBY, cityUrl } from '../data/cities';
+import { SITE } from '../data/site';
+const pos: Record<string, [number, number]> = { '': [408, 196], severodvinsk: [140, 176], novodvinsk: [528, 306] };
+---
+<div class="cm">
+  <svg class="cm-svg" viewBox="0 0 640 400" role="img" aria-label="Схема: производство в Архангельске, Северодвинск в 38 км, Новодвинск в 24 км">
+    <path class="cm-sea" d="M0 0H640V46C560 60 500 96 440 110C400 120 392 140 380 150C330 150 250 118 150 140C90 152 40 142 0 152Z" />
+    <path class="cm-river" d="M640 384C590 346 556 326 528 306C484 268 442 236 412 198C398 174 392 160 396 138" />
+    <text class="cm-label" x="250" y="72">Двинская губа</text>
+    <text class="cm-label" x="560" y="372" text-anchor="end">Северная Двина</text>
+    <path class="cm-route" pathLength="1" d="M408 196C330 214 230 206 140 176" />
+    <path class="cm-route" pathLength="1" d="M408 196C450 236 490 276 528 306" />
+    <text class="cm-km" x="268" y="226">38 км · 45 мин</text>
+    <text class="cm-km" x="486" y="246">24 км · 30 мин</text>
+    {CITIES.map((c) => {
+      const [x, y] = pos[c.slug];
+      return (
+        <a href={cityUrl(c)} class:list={['cm-city', { main: !c.slug }]}>
+          {!c.slug && <circle class="cm-pulse" cx={x} cy={y} r="10" />}
+          <circle cx={x} cy={y} r={c.slug ? 6 : 8} />
+          <text x={x + (c.slug === 'severodvinsk' ? -4 : 14)} y={y + (c.slug === 'severodvinsk' ? -16 : 5)} text-anchor={c.slug === 'severodvinsk' ? 'middle' : 'start'}>{c.name}</text>
+          {!c.slug && <text class="cm-sub" x={x + 14} y={y + 22}>{SITE.factory.street}</text>}
+        </a>
+      );
+    })}
+  </svg>
+  <ul class="cm-list">
+    {CITIES.map((c, i) => (
+      <li class="reveal" style={`--i:${i}`}>
+        <a href={cityUrl(c)}>
+          <span class="cm-name">{c.name}</span>
+          <span class="small cm-meta">{c.km ? `${c.km} км · ${c.drive}` : 'производство здесь'}</span>
+          <span class="small cm-free">замер и доставка 0 ₽</span>
+        </a>
+      </li>
+    ))}
+    <li class="small cm-near reveal">Также: {NEARBY.join(', ')}</li>
+  </ul>
+</div>
+<style>
+  .cm { display: grid; gap: 28px; align-items: center; }
+  @media (min-width: 960px) { .cm { grid-template-columns: 1.25fr 1fr; gap: 56px; } }
+  .cm-svg { width: 100%; height: auto; border: 1px solid var(--line-dark); border-radius: var(--r-lg); background: var(--dark-2); }
+  .cm-sea { fill: rgb(242 238 231 / 0.05); }
+  .cm-river { fill: none; stroke: rgb(242 238 231 / 0.1); stroke-width: 14; stroke-linecap: round; }
+  .cm-label { fill: rgb(242 238 231 / 0.3); font: italic 500 17px var(--serif); }
+  .cm-route { fill: none; stroke: var(--oak); stroke-width: 1.500; stroke-dasharray: 0.012 0.014; animation: cm-dash 1.600s linear infinite; }
+  @keyframes cm-dash { to { stroke-dashoffset: -0.026; } }
+  .cm-km { fill: var(--oak); font: 500 12px var(--sans); text-anchor: middle; }
+  .cm-city circle { fill: var(--on-dark); transition: r 0.3s; }
+  .cm-city.main circle { fill: var(--accent); }
+  .cm-city text { fill: var(--on-dark); font: 500 17px var(--sans); }
+  .cm-city .cm-sub { fill: var(--on-dark-2); font: 400 12px var(--sans); }
+  .cm-city:hover text { fill: var(--oak); }
+  .cm-city .cm-pulse { fill: none; stroke: var(--accent); transform-box: fill-box; transform-origin: center; animation: cm-pulse 2.400s ease-out infinite; }
+  @keyframes cm-pulse { from { transform: scale(0.8); opacity: 1; } to { transform: scale(3.2); opacity: 0; } }
+  .cm-list { display: grid; }
+  .cm-list a { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 20px 0; border-top: 1px solid var(--line-dark); text-decoration: none; transition: padding 0.4s var(--ease); }
+  .cm-list a:hover { padding-left: 14px; }
+  .cm-name { font: 500 clamp(28px, 3vw, 42px)/1 var(--serif); grid-row: span 2; align-self: center; transition: color 0.2s; }
+  .cm-list a:hover .cm-name { color: var(--oak); }
+  .cm-meta { color: var(--on-dark-2); text-align: right; }
+  .cm-free { color: var(--oak); text-align: right; }
+  .cm-near { padding-top: 20px; border-top: 1px solid var(--line-dark); color: var(--on-dark-2); }
+</style>

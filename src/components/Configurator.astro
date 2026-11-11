@@ -1,0 +1,248 @@
+---
+/**
+ * Конструктор кухни: планировка → длина → фасады и цвет → столешница → фурнитура → опции.
+ * Схема меняется вживую, цена считается из src/data/content.ts (CALC). Состояние хранится в адресной строке —
+ * расчётом можно поделиться ссылкой. Итог уходит в заявку.
+ */
+import KitchenSvg from './KitchenSvg.astro';
+import Icon from './Icon.astro';
+import { CALC } from '../data/content';
+import { SITE } from '../data/site';
+const plans: Record<string, string> = {
+  straight: '<rect x="4" y="6" width="32" height="8" rx="1"/>',
+  corner: '<path d="M4 6h32v8H12v20H4Z"/>',
+  u: '<path d="M4 6h32v28h-8V14H12v20H4Z"/>',
+  island: '<rect x="4" y="6" width="32" height="8" rx="1"/><rect x="10" y="22" width="20" height="8" rx="1"/>',
+};
+---
+<div class="cf" data-configurator data-calc={JSON.stringify(CALC)} data-months={SITE.promises.installmentMonths}>
+  <div class="cf-view">
+    <div class="cf-stage">
+      <KitchenSvg id="cf" class="has-light" />
+      <p class="cf-note small">Схема условная: показана основная стена. Точный проект с размерами дизайнер сделает после замера.</p>
+    </div>
+    <div class="cf-total">
+      <div>
+        <p class="eyebrow">Ориентир стоимости</p>
+        <p class="cf-price num"><span data-out="min">—</span> – <span data-out="max">—</span> ₽</p>
+        <p class="small cf-sub">Корпус, фасады, столешница, фурнитура, доставка и монтаж. Без техники. <span class="nowrap">В рассрочку — от <b class="num" data-out="month">—</b> ₽ / мес</span></p>
+      </div>
+      <div class="cf-actions">
+        <button class="btn btn--accent on-dark" data-lead="Конструктор" data-lead-title="Зафиксировать расчёт" data-cf-lead>Зафиксировать расчёт <Icon name="arrow" class="arr" /></button>
+        <button class="btn btn--ghost on-dark btn--sm" type="button" data-cf-share>Скопировать ссылку</button>
+      </div>
+    </div>
+  </div>
+
+  <form class="cf-form" data-cf-form>
+    <fieldset>
+      <legend><span class="num">01</span> Планировка</legend>
+      <div class="cf-opts cf-opts--4">
+        {CALC.layouts.map((l, i) => (
+          <label class="opt opt--plan"><input type="radio" name="l" value={l.id} checked={i === 1} /><span><svg viewBox="0 0 40 40" fill="currentColor" aria-hidden="true" set:html={plans[l.id]} /><b>{l.name}</b></span></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="num">02</span> Длина гарнитура <output class="num" data-out="len">4,2 м</output></legend>
+      <input class="range" type="range" name="m" min="1.8" max="10" step="0.1" value="4.2" aria-label="Длина гарнитура в метрах" />
+      <p class="small muted" data-out="lenhint">Сумма длин всех сторон</p>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="num">03</span> Фасады</legend>
+      <div class="cf-opts">
+        {CALC.facades.map((f, i) => (
+          <label class="opt"><input type="radio" name="f" value={f.id} checked={i === 1} /><span><b>{f.name}</b><i>{f.note}</i><em class="num">от {f.price.toLocaleString('ru-RU')} ₽ / п. м</em></span></label>
+        ))}
+      </div>
+      <div class="cf-sw" role="radiogroup" aria-label="Цвет фасадов">
+        {CALC.colors.map((c, i) => (
+          <label class="sw" title={c.name}><input type="radio" name="c" value={c.id} checked={i === 0} data-hex={c.hex} /><span style={`background:${c.hex}`}></span><i class="sw-name">{c.name}</i></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="num">04</span> Столешница</legend>
+      <div class="cf-opts cf-opts--2">
+        {CALC.tops.map((t, i) => (
+          <label class="opt opt--top"><input type="radio" name="t" value={t.id} checked={i === 0} data-hex={t.hex} /><span><u style={`background:${t.hex}`}></u><b>{t.name}</b><em class="num">от {t.price.toLocaleString('ru-RU')} ₽ / п. м</em></span></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="num">05</span> Фурнитура</legend>
+      <div class="cf-opts cf-opts--3">
+        {CALC.hardware.map((h, i) => (
+          <label class="opt"><input type="radio" name="h" value={h.id} checked={i === 1} /><span><b>{h.name}</b><i>{h.note}</i></span></label>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><span class="num">06</span> Опции</legend>
+      <div class="cf-opts cf-opts--2">
+        {CALC.options.map((o) => (
+          <label class="opt opt--check"><input type="checkbox" name="o" value={o.id} checked={o.id === 'light'} /><span><b>{o.name}</b><em class="num">+{o.perM.toLocaleString('ru-RU')} ₽ / п. м</em></span></label>
+        ))}
+      </div>
+    </fieldset>
+  </form>
+</div>
+
+<script>
+  import { goal } from '../lib/lead-client';
+  type Calc = typeof import('../data/content').CALC;
+
+  document.querySelectorAll<HTMLElement>('[data-configurator]').forEach((root) => {
+    const C: Calc = JSON.parse(root.dataset.calc!);
+    const months = Number(root.dataset.months);
+    const form = root.querySelector<HTMLFormElement>('[data-cf-form]')!;
+    const svg = root.querySelector<SVGElement>('.ksvg')!;
+    const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+    const range = form.elements.namedItem('m') as HTMLInputElement;
+    const nf = new Intl.NumberFormat('ru-RU');
+    const round = (n: number) => Math.round(n / 1000) * 1000;
+    let touched = false;
+
+    // Восстановить состояние из ссылки
+    const qs = new URLSearchParams(location.search);
+    for (const [k, v] of qs) {
+      if (k === 'o') v.split('.').forEach((id) => { const el = form.querySelector<HTMLInputElement>(`[name=o][value="${id}"]`); if (el) el.checked = true; });
+      else if (k === 'm') range.value = v;
+      else { const el = form.querySelector<HTMLInputElement>(`[name="${k}"][value="${v}"]`); if (el) el.checked = true; }
+    }
+    if (qs.has('l')) form.querySelectorAll<HTMLInputElement>('[name=o]').forEach((el) => (el.checked = (qs.get('o') || '').split('.').includes(el.value)));
+
+    function state() {
+      const fd = new FormData(form);
+      return { l: String(fd.get('l')), m: Number(fd.get('m')), f: String(fd.get('f')), c: String(fd.get('c')), t: String(fd.get('t')), h: String(fd.get('h')), o: fd.getAll('o').map(String) };
+    }
+
+    function render(fromLayout = false) {
+      let s = state();
+      const L = C.layouts.find((x) => x.id === s.l)!;
+      range.min = String(L.min); range.max = String(L.max);
+      if (fromLayout) range.value = String(L.def);
+      if (Number(range.value) < L.min) range.value = String(L.min);
+      if (Number(range.value) > L.max) range.value = String(L.max);
+      s = state();
+      const F = C.facades.find((x) => x.id === s.f)!;
+      const T = C.tops.find((x) => x.id === s.t)!;
+      const H = C.hardware.find((x) => x.id === s.h)!;
+      const opts = C.options.filter((o) => s.o.includes(o.id));
+      const perM = F.price * L.k * H.k + T.price + opts.reduce((a, o) => a + o.perM, 0);
+      const total = perM * s.m;
+      const min = round(total * (1 - C.spread)), max = round(total * (1 + C.spread));
+      out('min').textContent = nf.format(min);
+      out('max').textContent = nf.format(max);
+      out('month').textContent = nf.format(Math.round(min / months / 100) * 100);
+      out('len').textContent = s.m.toLocaleString('ru-RU', { minimumFractionDigits: 1 }) + ' м';
+      out('lenhint').textContent = s.l === 'straight' ? 'Длина вдоль стены' : s.l === 'island' ? 'Длина гарнитура вместе с островом' : 'Сумма длин всех сторон';
+      range.style.setProperty('--fill', ((s.m - L.min) / (L.max - L.min)) * 100 + '%');
+
+      // Схема
+      const col = form.querySelector<HTMLInputElement>('[name=c]:checked')!;
+      svg.style.setProperty('--kf', col.dataset.hex!);
+      svg.style.setProperty('--kt', form.querySelector<HTMLInputElement>('[name=t]:checked')!.dataset.hex!);
+      svg.classList.toggle('has-ceiling', s.o.includes('ceiling'));
+      svg.classList.toggle('has-gola', s.o.includes('gola'));
+      svg.classList.toggle('has-light', s.o.includes('light'));
+      svg.classList.toggle('has-panel', s.o.includes('panel'));
+      svg.classList.toggle('has-island', s.l === 'island');
+      svg.classList.toggle('has-grain', s.f === 'veneer' || s.c === 'oak');
+
+      // Итог для заявки и ссылка
+      const colorName = col.closest('label')!.getAttribute('title');
+      const summary = `${L.name} ${s.m} м · ${F.name}, ${colorName} · столешница: ${T.name} · фурнитура: ${H.name}${opts.length ? ' · ' + opts.map((o) => o.name).join(', ') : ''} · ${nf.format(min)}–${nf.format(max)} ₽`;
+      root.querySelector<HTMLElement>('[data-cf-lead]')!.dataset.leadExtra = summary;
+      const p = new URLSearchParams({ l: s.l, m: String(s.m), f: s.f, c: s.c, t: s.t, h: s.h, o: s.o.join('.') });
+      root.dataset.share = `${location.origin}/konstruktor/?${p}`;
+      if (touched && location.pathname.startsWith('/konstruktor')) history.replaceState(null, '', `?${p}`);
+    }
+
+    form.addEventListener('input', (e) => {
+      if (!touched) { touched = true; goal('calc'); }
+      render((e.target as HTMLInputElement).name === 'l');
+    });
+    form.addEventListener('submit', (e) => e.preventDefault());
+    root.querySelector('[data-cf-share]')?.addEventListener('click', async (e) => {
+      const b = e.currentTarget as HTMLButtonElement;
+      try { await navigator.clipboard.writeText(root.dataset.share!); b.textContent = 'Ссылка скопирована'; } catch { prompt('Ссылка на расчёт', root.dataset.share); }
+      setTimeout(() => (b.textContent = 'Скопировать ссылку'), 2200);
+    });
+    render();
+  });
+</script>
+
+<style>
+  .cf { display: grid; gap: clamp(20px, 3vw, 40px); align-items: start; }
+  @media (min-width: 1040px) { .cf { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } .cf-view { position: sticky; top: calc(var(--header-h) + 16px); } }
+  .cf-view { display: grid; border-radius: var(--r-lg); overflow: hidden; background: var(--dark); color: var(--on-dark); }
+  .cf-stage { position: relative; background: #e7e2d9; }
+  .cf-note { position: absolute; left: 12px; right: 12px; top: 10px; color: rgb(28 29 27 / 0.5); font-size: 12px; }
+  .cf-total { display: grid; gap: 18px; padding: clamp(18px, 2.4vw, 30px); }
+  .cf-price { font: 500 clamp(34px, 4.4vw, 60px)/1 var(--serif); letter-spacing: -0.02em; margin-block: 10px 8px; white-space: nowrap; }
+  .cf-sub { color: var(--on-dark-2); }
+  .cf-sub b { color: var(--on-dark); font-weight: 500; }
+  .cf-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  @media (max-width: 1039px) {
+    .cf-view { position: sticky; top: 0; z-index: 5; margin-inline: calc(var(--gut) * -1); border-radius: 0; }
+    .cf-total { grid-template-columns: 1fr; gap: 10px; padding-block: 12px; }
+    .cf-total .eyebrow, .cf-sub, .cf-note, [data-cf-share] { display: none; }
+    .cf-price { font-size: 28px; margin: 0; }
+    .cf-total { grid-template-columns: 1fr auto; align-items: center; }
+    .cf-stage :global(svg) { max-height: 34vh; margin-inline: auto; }
+    .cf-actions .btn { min-height: 42px; padding-inline: 16px; font-size: 13px; }
+  }
+
+  .cf-form { display: grid; gap: clamp(24px, 3vw, 36px); }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 14px; }
+  legend { display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 0 0 12px; margin-bottom: 14px; border-bottom: 1px solid var(--line); font: 500 clamp(22px, 2vw, 28px)/1.1 var(--serif); }
+  legend > .num { font: 400 12px/1 var(--sans); color: var(--muted); letter-spacing: 0.08em; }
+  legend output { margin-left: auto; font: 500 18px/1 var(--sans); color: var(--accent-2); }
+  .cf-opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .cf-opts--4 { grid-template-columns: repeat(4, 1fr); }
+  .cf-opts--3 { grid-template-columns: repeat(3, 1fr); }
+  .cf-opts--2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px) { .cf-opts--4 { grid-template-columns: repeat(2, 1fr); } .cf-opts--3, .cf-opts { grid-template-columns: 1fr 1fr; } }
+  .opt { position: relative; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; inset: 0; }
+  .opt > span { display: grid; gap: 4px; height: 100%; padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper); transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.2s var(--ease); }
+  .opt:hover > span { border-color: var(--ink); }
+  .opt input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .opt:active > span { transform: scale(0.98); }
+  .opt b { font-weight: 500; font-size: 15px; line-height: 1.2; }
+  .opt i { font-style: normal; font-size: 12.500px; opacity: 0.62; line-height: 1.3; }
+  .opt em { font-style: normal; font-size: 12.500px; color: var(--accent-2); margin-top: auto; padding-top: 4px; }
+  .opt input:checked + span em { color: var(--oak); }
+  .opt--plan > span { justify-items: center; text-align: center; gap: 8px; }
+  .opt--plan svg { width: 40px; height: 40px; opacity: 0.85; }
+  .opt--top > span { grid-template-columns: 28px 1fr; column-gap: 12px; align-items: center; }
+  .opt--top u { grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 0.15); }
+  .opt--check > span { padding-left: 44px; }
+  .opt--check > span::before { content: ''; position: absolute; left: 14px; top: 15px; width: 18px; height: 18px; border: 1px solid currentColor; border-radius: 4px; opacity: 0.5; }
+  .opt--check input:checked + span::before { opacity: 1; background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / 12px no-repeat; border-color: var(--accent); }
+
+  .cf-sw { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .sw { position: relative; cursor: pointer; }
+  .sw input { position: absolute; opacity: 0; }
+  .sw span { display: block; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 0.14); box-shadow: inset 0 0 0 3px var(--bg); transition: transform 0.25s var(--ease), box-shadow 0.25s; }
+  .sw:hover span { transform: scale(1.08); }
+  .sw input:checked + span { box-shadow: inset 0 0 0 3px var(--bg), 0 0 0 2px var(--ink); }
+  .sw input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .sw-name { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); font-style: normal; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .sw input:checked ~ .sw-name { opacity: 0.7; }
+  .cf-sw { padding-bottom: 20px; }
+
+  .range { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; background: transparent; --fill: 40%; }
+  .range::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, var(--ink) var(--fill), var(--line) var(--fill)); }
+  .range::-moz-range-track { height: 2px; background: linear-gradient(90deg, var(--ink) var(--fill), var(--line) var(--fill)); }
+  .range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -13px; border-radius: 50%; background: var(--accent); border: 6px solid var(--bg); box-shadow: 0 0 0 1px var(--accent); cursor: grab; transition: transform 0.2s; }
+  .range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 6px solid var(--bg); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+  .range:active::-webkit-slider-thumb { transform: scale(1.15); cursor: grabbing; }
+</style>

@@ -1,0 +1,7 @@
+---
+import ItemPage from '../../components/ItemPage.astro';
+import { FURNITURE } from '../../data/catalog';
+export const getStaticPaths = () => FURNITURE.map((item) => ({ params: { slug: item.slug }, props: { item } }));
+const { item } = Astro.props;
+---
+<ItemPage item={item} />

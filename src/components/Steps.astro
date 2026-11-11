@@ -1,0 +1,25 @@
+---
+import { STEPS } from '../data/content';
+---
+<ol class="steps">
+  {STEPS.map((s, i) => (
+    <li class="step reveal" style={`--i:${i % 3}`}>
+      <span class="step-n num">{String(i + 1).padStart(2, '0')}</span>
+      <div class="stack" style="gap:8px"><h3 class="h-sm">{s.t}</h3><p class="small step-d">{s.d}</p></div>
+      <span class="chip step-t">{s.time}</span>
+    </li>
+  ))}
+</ol>
+<style>
+  .steps { display: grid; counter-reset: s; border-top: 1px solid var(--line); }
+  .step { display: grid; grid-template-columns: 70px 1fr auto; gap: 16px 24px; align-items: start; padding: 26px 0; border-bottom: 1px solid var(--line); transition: padding 0.4s var(--ease), background 0.3s; }
+  .step:hover { padding-inline: 16px; background: var(--paper); }
+  .step-n { font: 500 clamp(30px, 3vw, 44px)/1 var(--serif); color: var(--accent); }
+  .step-d { color: var(--ink-2); max-width: 64ch; font-size: 15.500px; }
+  .step-t { align-self: center; }
+  :global(.dark) .steps, :global(.dark) .step { border-color: var(--line-dark); }
+  :global(.dark) .step:hover { background: var(--dark-2); }
+  :global(.dark) .step-d { color: var(--on-dark-2); }
+  :global(.dark) .step-n { color: var(--oak); }
+  @media (max-width: 640px) { .step { grid-template-columns: 48px 1fr; } .step-t { grid-column: 2; justify-self: start; } .step:hover { padding-inline: 0; background: none; } }
+</style>

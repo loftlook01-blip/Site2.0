@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import LeadFields from '../components/LeadFields.astro';
+import Icon from '../components/Icon.astro';
+import { SITE, messengers } from '../data/site';
+import { CITIES, cityUrl } from '../data/cities';
+import { breadcrumbs } from '../lib/schema';
+const crumbs = [{ name: 'Контакты', url: '/kontakty/' }];
+const F = SITE.factory;
+---
+<Base title="Контакты — производство кухонь, Архангельск, ул. Касаткиной, 13" description={`Адрес производства: ${F.address}. Телефон ${SITE.phone}, ${SITE.hours.label}. Замер в Архангельске, Северодвинске и Новодвинске.`} schema={[breadcrumbs(crumbs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Контакты" title="Как <em>нас найти</em>" />
+  <section class="sec--tight sec"><div class="wrap kt">
+    <div class="stack" style="gap:28px">
+      <div class="kt-i"><Icon name="pin" /><div><b>Производство и приём заказов</b><address>{F.address}</address><p class="small muted">{F.note}</p></div></div>
+      <div class="kt-i"><Icon name="phone" /><div><b>Телефон</b><a class="num kt-ph" href={`tel:${SITE.phoneHref}`} data-goal="call">{SITE.phone}</a><p class="small muted">{SITE.hours.label}</p></div></div>
+      <div class="kt-i"><Icon name="doc" /><div><b>Почта</b><a href={`mailto:${SITE.email}`}>{SITE.email}</a></div></div>
+      {messengers().length > 0 && <div class="row">{messengers().map((m) => <a class="chip" href={m.href} target="_blank" rel="noopener" data-goal="messenger">{m.label}</a>)}</div>}
+      <div><p class="eyebrow">Работаем в городах</p><div class="row" style="margin-top:12px">{CITIES.map((c) => <a class="chip" href={cityUrl(c)}>{c.name}</a>)}</div></div>
+      <a class="btn btn--ghost" style="justify-self:start" href={`https://yandex.ru/maps/?pt=${F.lng},${F.lat}&z=16&l=map`} target="_blank" rel="noopener">Построить маршрут</a>
+    </div>
+    <div class="kt-form"><h2 class="h-md">Вызвать замерщика</h2><p class="small muted">Перезвоним в течение 15 минут в рабочее время.</p><LeadFields source="Контакты — форма" idp="kt" /></div>
+  </div></section>
+</Base>
+<style>
+  .kt { display: grid; gap: 48px; }
+  @media (min-width: 900px) { .kt { grid-template-columns: 1fr 1fr; gap: 80px; } }
+  .kt-i { display: grid; grid-template-columns: 28px 1fr; gap: 16px; }
+  .kt-i :global(svg) { width: 26px; height: 26px; color: var(--accent); }
+  .kt-i > div { display: grid; gap: 4px; }
+  .kt-i b { font: 500 13px/1 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  address { font-style: normal; font: 500 clamp(22px, 2.4vw, 30px)/1.2 var(--serif); }
+  .kt-ph { font: 500 clamp(28px, 3.4vw, 44px)/1.1 var(--serif); text-decoration: none; }
+  .kt-form { display: grid; gap: 14px; align-content: start; padding: clamp(22px, 3vw, 40px); background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-lg); }
+</style>

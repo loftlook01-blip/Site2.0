@@ -1,0 +1,16 @@
+---
+interface Props { items: { name: string; url: string }[] }
+const { items } = Astro.props;
+---
+<nav class="crumbs small" aria-label="Хлебные крошки">
+  <a href="/">Главная</a>
+  {items.map((it, i) => (i === items.length - 1 ? <span aria-current="page">{it.name}</span> : <a href={it.url}>{it.name}</a>))}
+</nav>
+<style>
+  .crumbs { display: flex; flex-wrap: wrap; gap: 6px 10px; color: var(--muted); }
+  .crumbs a { text-decoration: none; }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs > *:not(:last-child)::after { content: '/'; margin-left: 10px; opacity: 0.5; }
+  :global(.dark) .crumbs { color: var(--on-dark-2); }
+  :global(.dark) .crumbs a:hover { color: var(--on-dark); }
+</style>

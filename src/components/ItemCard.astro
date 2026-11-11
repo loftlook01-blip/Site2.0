@@ -1,0 +1,27 @@
+---
+import Pic from './Pic.astro';
+import Icon from './Icon.astro';
+import { itemUrl, priceLabel, type Item } from '../data/catalog';
+interface Props { item: Item; i?: number; ratio?: string; city?: string }
+const { item, i = 0, ratio = '4 / 5' } = Astro.props;
+---
+<a class="ic reveal" href={itemUrl(item)} style={`--i:${i % 4}`}>
+  <Pic name={item.img} alt={`${item.name} на заказ — пример проекта`} ratio={ratio} zoom viz sizes="(max-width: 700px) 80vw, (max-width: 1100px) 45vw, 30vw" />
+  <div class="ic-body">
+    <div><h3 class="ic-name">{item.name}</h3><p class="small muted">{item.short}</p></div>
+    <p class="ic-price num small">{priceLabel(item)}</p>
+  </div>
+  <span class="ic-go" aria-hidden="true"><Icon name="up" /></span>
+</a>
+<style>
+  .ic { position: relative; display: grid; gap: 14px; text-decoration: none; min-width: 0; }
+  .ic-body > div { min-width: 0; }
+  .ic-price { font-size: 13px; }
+  .ic-body { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+  .ic-name { font: 500 clamp(22px, 2vw, 28px)/1.1 var(--serif); letter-spacing: -0.01em; transition: color 0.2s; }
+  .ic:hover .ic-name { color: var(--accent); }
+  .ic-price { white-space: nowrap; padding-top: 5px; }
+  .ic-go { position: absolute; right: 12px; top: 12px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--bg); color: var(--ink); opacity: 0; transform: scale(0.6) rotate(-45deg); transition: opacity 0.35s, transform 0.5s var(--ease); }
+  .ic-go :global(svg) { width: 18px; height: 18px; }
+  .ic:hover .ic-go, .ic:focus-visible .ic-go { opacity: 1; transform: none; }
+</style>

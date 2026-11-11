@@ -1,0 +1,318 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Pic from '../components/Pic.astro';
+import Marquee from '../components/Marquee.astro';
+import ItemCard from '../components/ItemCard.astro';
+import Assembly from '../components/Assembly.astro';
+import Configurator from '../components/Configurator.astro';
+import Compare from '../components/Compare.astro';
+import Steps from '../components/Steps.astro';
+import CityMap from '../components/CityMap.astro';
+import Faq from '../components/Faq.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { SITE, years } from '../data/site';
+import { PRIMARY_CITY } from '../data/cities';
+import { KITCHENS, FURNITURE, itemUrl, priceLabel } from '../data/catalog';
+import { FACTS, FAQ, STEPS, WORKSHOP, BRANDS, INCLUDED } from '../data/content';
+import { ARTICLES, articleUrl, fmtDate } from '../data/articles';
+import { faq, howTo, itemList, cityService } from '../lib/schema';
+
+const P = SITE.promises;
+const styles = KITCHENS.filter((k) => k.group === 'style');
+const layouts = KITCHENS.filter((k) => k.group === 'layout');
+const homeFaq = FAQ.slice(0, 7);
+const minPrice = Math.min(...KITCHENS.map((k) => k.from));
+const manifest = `Мы не продаём кухни из каталога. Мы строим их в цехе на Касаткиной, 13 — под ваши стены, вашу технику и ваш способ готовить.`.split(' ');
+const schema = [faq(homeFaq), howTo('Как заказать кухню на заказ в Архангельске', STEPS, P.productionDaysTo), itemList(KITCHENS, 'Кухни на заказ'), cityService(PRIMARY_CITY, minPrice)];
+---
+<Base
+  title={`Кухни на заказ в Архангельске от производителя — ${SITE.brand}`}
+  description={`Кухни на заказ в Архангельске, Северодвинске и Новодвинске с собственного производства. От ${minPrice.toLocaleString('ru-RU')} ₽ за п. м, изготовление от ${P.productionDaysFrom} дня, гарантия ${years(P.guaranteeMonths)}. Замер и 3D-проект бесплатно.`}
+  schema={schema} preload="hero" overlay
+>
+  <!-- ═════ Первый экран ═════ -->
+  <section class="hero dark" data-scrub="view">
+    <div class="hero-bg" aria-hidden="true"><Pic name="hero" alt="" ratio="auto" sizes="100vw" eager /></div>
+    <div class="wrap hero-in">
+      <p class="eyebrow hero-eyebrow reveal">Собственное производство · {SITE.factory.city}, {SITE.factory.street}</p>
+      <h1 class="h-xl split">
+        <span class="ln" style="--i:0"><span>Кухни на заказ</span></span>
+        <span class="ln" style="--i:1"><span>в Архангельске —</span></span>
+        <span class="ln" style="--i:2"><span><em>без салонной наценки</em></span></span>
+      </h1>
+      <div class="hero-row">
+        <p class="lead hero-lead reveal" style="--i:4">Проектируем, изготавливаем и устанавливаем кухни и корпусную мебель по вашим размерам. Архангельск, Северодвинск, Новодвинск.</p>
+        <div class="row reveal" style="--i:5">
+          <a class="btn btn--accent" href="#konstruktor">Рассчитать стоимость <Icon name="arrow" class="arr" /></a>
+          <button class="btn btn--ghost" data-lead="Первый экран">Вызвать замерщика</button>
+        </div>
+      </div>
+      <a class="hero-badge" href="#zayavka" aria-label="Бесплатный замер и 3D-проект — оставить заявку">
+        <svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="hb" d="M100 100m-78 0a78 78 0 1 1 156 0a78 78 0 1 1-156 0" /></defs><text><textPath href="#hb" textLength="484">БЕСПЛАТНЫЙ ЗАМЕР · 3D-ПРОЕКТ ЗА 2 ДНЯ · БЕСПЛАТНЫЙ ЗАМЕР · 3D-ПРОЕКТ ЗА 2 ДНЯ ·</textPath></text></svg>
+        <Icon name="ruler" />
+      </a>
+    </div>
+    <dl class="hero-facts wrap">
+      {FACTS.map((f, i) => (
+        <div class="reveal" style={`--i:${i + 5}`}><dt><b class="num">{f.v}</b> {f.u}</dt><dd>{f.l}</dd></div>
+      ))}
+    </dl>
+  </section>
+
+  <Marquee items={['Фасады в эмали', 'Шпон дуба', 'Кварцевые столешницы', 'Профиль Gola', 'Фурнитура Blum', 'Шкафы до потолка', 'Встроенная техника', 'Подсветка рабочей зоны']} />
+
+  <!-- ═════ Манифест ═════ -->
+  <section class="sec mani" data-scrub="view">
+    <div class="wrap mani-grid">
+      <p class="eyebrow">О подходе</p>
+      <p class="mani-text" aria-label={manifest.join(' ')}>
+        {manifest.map((w, i) => <span aria-hidden="true" style={`--w:${(i / manifest.length).toFixed(3)}`}>{w} </span>)}
+      </p>
+      <ul class="mani-list">
+        {INCLUDED.slice(0, 4).map((x, i) => <li class="reveal" style={`--i:${i}`}><b class="h-sm">{x.t}</b><span class="small muted">{x.d}</span></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═════ Каталог: стили ═════ -->
+  <section class="sec paper" id="kuhni">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">Каталог</p><h2 class="h-lg split"><span class="ln"><span>Кухни <em>по стилю</em></span></span></h2></div>
+        <div class="stack"><p class="lead">Любая кухня делается по индивидуальным размерам. Стиль — это отправная точка: фасады, цвет и наполнение подбираем под вас.</p><a class="link" href="/kuhni/">Весь каталог <Icon name="arrow" /></a></div>
+      </div>
+      <div class="cat-rail">
+        {styles.map((k, i) => <ItemCard item={k} i={i} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════ Планировки ═════ -->
+  <section class="sec--tight sec paper lay-sec">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Планировки</p><h2 class="h-md">Под вашу кухню — от 5 м² в хрущёвке до кухни-гостиной с островом</h2></div>
+      <ul class="lay" data-lay>
+        {layouts.map((k, i) => (
+          <li class="reveal" style={`--i:${i}`}>
+            <a href={itemUrl(k)} data-img={k.img}>
+              <span class="num lay-n">{String(i + 1).padStart(2, '0')}</span>
+              <span class="lay-name">{k.name}</span>
+              <span class="small muted lay-short">{k.short}</span>
+              <span class="num small lay-price">{priceLabel(k)}</span>
+              <Icon name="up" />
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="lay-float" data-lay-float aria-hidden="true">
+        {layouts.map((k) => <img src={`/images/${k.img}-800.webp`} alt="" loading="lazy" decoding="async" data-img={k.img} width="800" height="600" />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════ Сборка (motion) ═════ -->
+  <Assembly />
+
+  <!-- ═════ Конструктор ═════ -->
+  <section class="sec" id="konstruktor">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">Конструктор</p><h2 class="h-lg split"><span class="ln"><span>Соберите кухню</span></span><span class="ln" style="--i:1"><span>и узнайте <em>цену</em></span></span></h2></div>
+        <p class="lead">Выберите планировку, фасады и столешницу — схема и стоимость обновятся сразу. Расчёт можно отправить нам: дизайнер приедет на замер уже с подходящими образцами.</p>
+      </div>
+      <Configurator />
+    </div>
+  </section>
+
+  <!-- ═════ Сравнение ═════ -->
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">Почему производство</p><h2 class="h-lg">Салон, частный мастер <em>или цех?</em></h2></div>
+        <p class="lead">На рынке Архангельска три пути заказать кухню. Мы — третий: местное производство с договором, гарантией и ценой без посредников.</p>
+      </div>
+      <Compare />
+    </div>
+  </section>
+
+  <!-- ═════ Производство ═════ -->
+  <section class="sec dark work">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">Производство</p><h2 class="h-lg split"><span class="ln"><span>Цех на <em>Касаткиной, 13</em></span></span></h2></div>
+        <div class="stack"><p class="lead">Раскрой, кромление, присадка и контрольная сборка — в одном месте. Приезжайте посмотреть, как делают вашу кухню.</p><a class="link" href="/proizvodstvo/">О производстве <Icon name="arrow" /></a></div>
+      </div>
+      <div class="work-grid">
+        {WORKSHOP.map((w, i) => (
+          <article class="work-i" style={`--shift:${[0, 56, 112][i]}px`}>
+            <div data-parallax={[26, -14, 30][i]} class="work-pic"><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="3 / 4" viz reveal i={i} sizes="(max-width: 760px) 100vw, 33vw" /></div>
+            <h3 class="h-md"><span class="num work-n">0{i + 1}</span>{w.t}</h3>
+            <p class="small work-d">{w.d}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+    <Marquee items={BRANDS} dark />
+  </section>
+
+  <!-- ═════ Этапы ═════ -->
+  <section class="sec">
+    <div class="wrap steps-grid">
+      <div class="stack steps-head">
+        <p class="eyebrow">Как мы работаем</p>
+        <h2 class="h-lg">От замера до ужина — <em>{P.productionDaysFrom}–{P.productionDaysTo} дней</em></h2>
+        <p class="lead">Цена, срок и комплектация фиксируются в договоре. Предоплата {P.prepayPct}%, остаток — после монтажа.</p>
+        <button class="btn" data-lead="Этапы">Записаться на замер <Icon name="arrow" class="arr" /></button>
+      </div>
+      <Steps />
+    </div>
+  </section>
+
+  <!-- ═════ Корпусная мебель ═════ -->
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">Не только кухни</p><h2 class="h-lg">Корпусная мебель <em>по размерам</em></h2></div>
+        <div class="stack"><p class="lead">Шкафы, гардеробные, прихожие, мебель для ванной и детской — в тех же материалах и с той же гарантией. При заказе вместе с кухней — один замер и одна доставка.</p><a class="link" href="/mebel/">Вся мебель <Icon name="arrow" /></a></div>
+      </div>
+      <div class="furn">
+        {FURNITURE.map((k, i) => <ItemCard item={k} i={i} ratio="1 / 1" />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════ География ═════ -->
+  <section class="sec dark">
+    <div class="wrap">
+      <div class="sec-head sec-head--split">
+        <div class="stack"><p class="eyebrow">География</p><h2 class="h-lg">Архангельск, Северодвинск, <em>Новодвинск</em></h2></div>
+        <p class="lead">Замер, доставка и монтаж — бесплатно во всех трёх городах. Гарантийный мастер приезжает за 2–3 дня, потому что производство рядом, а не за тысячу километров.</p>
+      </div>
+      <CityMap />
+    </div>
+  </section>
+
+  <!-- ═════ FAQ ═════ -->
+  <section class="sec">
+    <div class="wrap faq-grid">
+      <div class="stack faq-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">Спрашивают <em>до замера</em></h2><a class="link" href="/voprosy/">Все вопросы и ответы <Icon name="arrow" /></a></div>
+      <Faq items={homeFaq} />
+    </div>
+  </section>
+
+  <!-- ═════ Журнал ═════ -->
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head sec-head--split"><div class="stack"><p class="eyebrow">Журнал</p><h2 class="h-lg">Перед тем как <em>заказать</em></h2></div><a class="link" href="/blog/" style="justify-self:start">Все статьи <Icon name="arrow" /></a></div>
+      <div class="blog">
+        {ARTICLES.slice(0, 3).map((a, i) => (
+          <a class="blog-i reveal" href={articleUrl(a)} style={`--i:${i}`}>
+            <Pic name={a.img} alt={a.title} ratio="3 / 2" zoom sizes="(max-width: 760px) 100vw, 33vw" />
+            <p class="small muted">{fmtDate(a.date)} · {a.minutes} мин</p>
+            <h3 class="h-md">{a.title}</h3>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CtaLead source="Главная — форма" />
+</Base>
+
+<script>
+  // Манифест: слова проявляются по мере прокрутки (CSS берёт --p). Планировки: картинка следует за курсором.
+  const list = document.querySelector<HTMLElement>('[data-lay]');
+  const fl = document.querySelector<HTMLElement>('[data-lay-float]');
+  if (list && fl && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let x = 0, y = 0, tx = 0, ty = 0, raf = 0;
+    const loop = () => { x += (tx - x) * 0.14; y += (ty - y) * 0.14; fl.style.transform = `translate(${x}px, ${y}px)`; raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.3 ? requestAnimationFrame(loop) : 0; };
+    list.addEventListener('pointermove', (e) => { tx = e.clientX + 24; ty = e.clientY - 150; if (!raf) raf = requestAnimationFrame(loop); });
+    list.querySelectorAll<HTMLElement>('a').forEach((a) => {
+      a.addEventListener('pointerenter', () => { fl.classList.add('on'); fl.querySelectorAll<HTMLElement>('img').forEach((im) => im.classList.toggle('on', im.dataset.img === a.dataset.img)); });
+    });
+    list.addEventListener('pointerleave', () => fl.classList.remove('on'));
+  }
+</script>
+
+<style>
+  /* Первый экран */
+  .hero { position: relative; isolation: isolate; min-height: 100vh; min-height: 100svh; display: grid; grid-template-rows: 1fr auto; overflow: hidden; --p: 0.5; }
+  .hero-bg { position: absolute; inset: -6% 0; z-index: -1; transform: translateY(calc((var(--p) - 0.5) * 12%)); }
+  .hero-bg :global(.pic) { height: 100%; border-radius: 0; background: var(--dark); }
+  .hero-bg :global(img) { animation: hero-zoom 18s var(--ease) both; }
+  @keyframes hero-zoom { from { transform: scale(1.14); } }
+  .hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(21 22 20 / 0.62) 0%, rgb(21 22 20 / 0.18) 34%, rgb(21 22 20 / 0.5) 62%, rgb(21 22 20 / 0.94) 100%), linear-gradient(90deg, rgb(21 22 20 / 0.5), transparent 70%); }
+  .hero-in { position: relative; display: grid; align-content: end; gap: clamp(18px, 2.4vw, 32px); padding-top: calc(var(--header-h) + 40px); padding-bottom: clamp(28px, 4vw, 56px); }
+  .hero-eyebrow { color: var(--on-dark); }
+  .hero h1 { text-shadow: 0 2px 40px rgb(0 0 0 / 0.25); }
+  .hero-row { display: grid; gap: 22px; }
+  @media (min-width: 900px) { .hero-row { grid-template-columns: minmax(0, 520px) auto; justify-content: space-between; align-items: end; } }
+  .hero-lead { color: rgb(242 238 231 / 0.84); }
+  .hero-badge { position: absolute; right: 0; top: calc(var(--header-h) + 5vh); width: clamp(104px, 11vw, 156px); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #fff; transition: transform 0.5s var(--ease), background 0.3s; }
+  .hero-badge:hover { transform: scale(1.08); background: var(--accent-2); }
+  .hero-badge svg:first-child { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 22s linear infinite; }
+  .hero-badge text { font: 500 15.500px var(--sans); letter-spacing: 0.08em; fill: currentColor; }
+  .hero-badge :global(svg:last-child) { width: 30%; height: 30%; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 700px) { .hero-badge { display: none; } }
+  .hero-facts { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line-dark); }
+  .hero-facts > div { padding: clamp(14px, 2vw, 26px) clamp(10px, 2vw, 28px) clamp(18px, 2.4vw, 32px) 0; }
+  .hero-facts > div + div { padding-left: clamp(10px, 2vw, 28px); border-left: 1px solid var(--line-dark); }
+  .hero-facts dt { font-size: clamp(13px, 1.3vw, 18px); color: var(--on-dark-2); }
+  .hero-facts b { font: 500 clamp(34px, 5vw, 76px)/0.9 var(--serif); color: var(--on-dark); letter-spacing: -0.02em; }
+  .hero-facts dd { font-size: clamp(12px, 1vw, 14px); color: var(--on-dark-2); margin-top: 6px; max-width: 22ch; line-height: 1.3; }
+  @media (max-width: 640px) { .hero-facts { grid-template-columns: 1fr 1fr; } .hero-facts > div:nth-child(3) { border-left: 0; padding-left: 0; } .hero-facts > div:nth-child(n+3) { border-top: 1px solid var(--line-dark); } .hero-in { padding-top: calc(var(--header-h) + 24px); } }
+
+  /* Манифест */
+  .mani { --p: 0; }
+  .mani-grid { display: grid; gap: clamp(24px, 4vw, 56px); }
+  .mani-text { font: 500 clamp(30px, 5.2vw, 84px)/1.04 var(--serif); letter-spacing: -0.025em; max-width: 20ch; text-wrap: balance; }
+  .mani-text span { opacity: clamp(0.14, calc((var(--p) * 2.3 - 0.42 - var(--w)) * 9), 1); }
+  .mani-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 32px; }
+  .mani-list li { display: grid; gap: 6px; padding: 20px 0; border-top: 1px solid var(--line); align-content: start; }
+
+  /* Каталог */
+  .cat-rail > :global(*) { min-width: 0; }
+  .cat-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 24px); }
+  .cat-rail > :global(:nth-child(even)) { margin-top: clamp(0px, 4vw, 64px); }
+  @media (max-width: 1100px) { .cat-rail { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: min(74vw, 340px); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--gut) * -1); padding-inline: var(--gut); scrollbar-width: none; padding-bottom: 8px; } .cat-rail > :global(*) { scroll-snap-align: start; margin-top: 0 !important; } .cat-rail::-webkit-scrollbar { display: none; } }
+
+  .lay-sec { padding-top: 0; position: relative; }
+  .lay { border-top: 1px solid var(--line); }
+  .lay a { display: grid; grid-template-columns: 48px minmax(0, 1.2fr) minmax(0, 1fr) auto 24px; gap: 16px; align-items: center; padding: clamp(16px, 2vw, 26px) 0; border-bottom: 1px solid var(--line); text-decoration: none; transition: padding 0.5s var(--ease), color 0.2s; }
+  .lay a:hover { padding-inline: 18px; color: var(--accent); }
+  .lay-n { font-size: 12px; color: var(--muted); }
+  .lay-name { font: 500 clamp(26px, 3.6vw, 54px)/1 var(--serif); letter-spacing: -0.02em; }
+  .lay :global(svg) { width: 22px; height: 22px; transition: transform 0.4s var(--ease); }
+  .lay a:hover :global(svg) { transform: rotate(45deg); }
+  @media (max-width: 760px) { .lay a { grid-template-columns: 1fr auto 20px; } .lay-n, .lay-short { display: none; } }
+  .lay-float { position: fixed; left: 0; top: 0; z-index: 20; width: 300px; aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; pointer-events: none; opacity: 0; scale: 0.7; transition: opacity 0.3s, scale 0.5s var(--ease); }
+  .lay-float.on { opacity: 1; scale: 1; }
+  .lay-float img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.35s; }
+  .lay-float img.on { opacity: 1; }
+  @media (hover: none), (max-width: 900px) { .lay-float { display: none; } }
+
+  /* Производство */
+  .work { padding-bottom: 0; }
+  .work-grid { display: grid; gap: 40px 24px; margin-bottom: var(--sec); }
+  @media (min-width: 760px) { .work-grid { grid-template-columns: repeat(3, 1fr); } .work-i { margin-top: var(--shift); } }
+  .work-i { display: grid; gap: 14px; align-content: start; }
+  .work-pic { transform: translateY(var(--y, 0)); will-change: transform; }
+  .work-n { font: 400 13px var(--sans); color: var(--oak); margin-right: 12px; vertical-align: 0.9em; }
+  .work-d { color: var(--on-dark-2); font-size: 15.500px; max-width: 44ch; }
+
+  /* Этапы, FAQ */
+  .steps-grid, .faq-grid { display: grid; gap: clamp(28px, 4vw, 64px); }
+  @media (min-width: 1000px) { .steps-grid, .faq-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); align-items: start; } .steps-head, .faq-head { position: sticky; top: calc(var(--header-h) + 24px); } }
+  .steps-head .btn { justify-self: start; margin-top: 8px; }
+
+  .furn > :global(*) { min-width: 0; }
+  .furn { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: clamp(20px, 2.4vw, 36px) clamp(12px, 1.6vw, 24px); }
+  @media (max-width: 620px) { .furn { grid-template-columns: 1fr 1fr; } }
+
+  .blog { display: grid; gap: 32px 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .blog-i { display: grid; gap: 12px; text-decoration: none; align-content: start; }
+  .blog-i h3 { font-size: clamp(24px, 2.2vw, 32px); transition: color 0.2s; }
+  .blog-i:hover h3 { color: var(--accent); }
+</style>

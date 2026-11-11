@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Pic from '../components/Pic.astro';
+import Marquee from '../components/Marquee.astro';
+import Steps from '../components/Steps.astro';
+import Icon from '../components/Icon.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { SITE, years } from '../data/site';
+import { WORKSHOP, BRANDS } from '../data/content';
+import { breadcrumbs } from '../lib/schema';
+const crumbs = [{ name: 'Производство', url: '/proizvodstvo/' }];
+const F = SITE.factory;
+---
+<Base title="Производство кухонь в Архангельске — цех на Касаткиной, 13" description={`Собственное производство кухонь и корпусной мебели в Архангельске, ${F.street}: раскрой, кромление, присадка, контрольная сборка. Приезжайте посмотреть образцы.`} schema={[breadcrumbs(crumbs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Производство" title={`Цех на <em>${F.street}</em>`} lead="Мы не перепродаём чужие кухни. Каждый шкаф проходит раскрой, кромление и контрольную сборку в нашем цеху в Архангельске — поэтому можем делать любые размеры и быстро дорабатывать." />
+  <section class="sec--tight sec">
+    <div class="wrap pr-grid">
+      {WORKSHOP.map((w, i) => (
+        <article class="reveal" style={`--i:${i}`}><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="4 / 3" viz zoom sizes="(max-width: 900px) 100vw, 33vw" /><h3 class="h-md">{w.t}</h3><p class="muted">{w.d}</p></article>
+      ))}
+    </div>
+  </section>
+  <Marquee items={BRANDS} />
+  <section class="sec paper">
+    <div class="wrap pr-visit">
+      <div class="stack"><p class="eyebrow">Приезжайте</p><h2 class="h-lg">Образцы <em>вживую</em></h2><p class="lead">{F.note}</p><address><Icon name="pin" /> {F.address}</address><p class="small muted">{SITE.hours.label} · по предварительной записи</p>
+        <div class="row"><button class="btn btn--accent" data-lead="Производство" data-lead-title="Записаться на визит">Записаться на визит <Icon name="arrow" class="arr" /></button><a class="btn btn--ghost" href={`https://yandex.ru/maps/?pt=${F.lng},${F.lat}&z=16&l=map`} target="_blank" rel="noopener">Открыть на карте</a></div>
+      </div>
+      <ul class="pr-list"><li><b>Гарантия {years(SITE.promises.guaranteeMonths)}</b><span class="small muted">на корпус, фасады и фурнитуру</span></li><li><b>Контроль на каждом этапе</b><span class="small muted">от раскроя до пробной сборки</span></li><li><b>Доработка за 2–3 дня</b><span class="small muted">деталь переделывают в цехе, а не ждут с фабрики</span></li></ul>
+    </div>
+  </section>
+  <section class="sec"><div class="wrap"><div class="sec-head"><p class="eyebrow">Процесс</p><h2 class="h-lg">От заявки <em>до монтажа</em></h2></div><Steps /></div></section>
+  <CtaLead source="Производство — форма" img="w-assembly" />
+</Base>
+<style>
+  .pr-grid { display: grid; gap: 36px 24px; }
+  @media (min-width: 900px) { .pr-grid { grid-template-columns: repeat(3, 1fr); } }
+  .pr-grid article { display: grid; gap: 12px; align-content: start; }
+  .pr-visit { display: grid; gap: 40px; }
+  @media (min-width: 900px) { .pr-visit { grid-template-columns: 1.2fr 1fr; gap: 80px; align-items: center; } }
+  address { display: flex; gap: 10px; font-style: normal; font-weight: 500; }
+  address :global(svg) { width: 20px; height: 20px; color: var(--accent); flex: none; margin-top: 3px; }
+  .pr-list li { display: grid; gap: 4px; padding: 22px 0; border-top: 1px solid var(--line); }
+  .pr-list b { font: 500 26px/1.1 var(--serif); }
+</style>

@@ -1,0 +1,51 @@
+---
+import LeadFields from './LeadFields.astro';
+import Icon from './Icon.astro';
+---
+<dialog class="lm" id="lead-modal" aria-labelledby="lm-title">
+  <div class="lm-box">
+    <button class="lm-close icon-btn" type="button" aria-label="Закрыть" data-close><Icon name="close" /></button>
+    <p class="eyebrow">Бесплатно · ответим за 15 минут</p>
+    <h2 class="lm-title" id="lm-title">Вызвать замерщика</h2>
+    <p class="lm-extra small" data-extra-view hidden></p>
+    <LeadFields source="Модальное окно" idp="lm" />
+  </div>
+</dialog>
+
+<script>
+  import { bindForms, goal } from '../lib/lead-client';
+  const dlg = document.getElementById('lead-modal') as HTMLDialogElement | null;
+  bindForms();
+  document.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-lead]');
+    if (t && dlg) {
+      e.preventDefault();
+      const form = dlg.querySelector('form')!;
+      form.classList.remove('is-sent', 'is-failed');
+      (form.querySelector('[data-status]') as HTMLElement).textContent = '';
+      (form.querySelector('[data-source]') as HTMLInputElement).value = t.dataset.lead || 'Сайт';
+      const extra = t.dataset.leadExtra || '';
+      (form.querySelector('[data-extra]') as HTMLInputElement).value = extra;
+      const ev = dlg.querySelector<HTMLElement>('[data-extra-view]')!;
+      ev.hidden = !extra; ev.textContent = extra;
+      dlg.querySelector('#lm-title')!.textContent = t.dataset.leadTitle || 'Вызвать замерщика';
+      const city = t.dataset.leadCity;
+      if (city) (form.querySelector('select[name=city]') as HTMLSelectElement).value = city;
+      dlg.showModal();
+      goal('lead_open', { source: t.dataset.lead });
+    }
+    if ((e.target as HTMLElement).closest('[data-close]')) dlg?.close();
+  });
+  dlg?.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+</script>
+
+<style>
+  .lm { border: 0; padding: 0; background: transparent; color: var(--ink); width: min(560px, calc(100% - 20px)); max-height: calc(100dvh - 20px); }
+  .lm::backdrop { background: rgb(21 22 20 / 0.6); backdrop-filter: blur(8px); }
+  .lm[open] { animation: lm-in 0.45s var(--ease); }
+  @keyframes lm-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } }
+  .lm-box { position: relative; background: var(--bg); border-radius: var(--r-lg); padding: clamp(22px, 4vw, 40px); display: grid; gap: 14px; }
+  .lm-title { font: 500 clamp(32px, 4vw, 44px)/1 var(--serif); letter-spacing: -0.02em; padding-right: 52px; }
+  .lm-close { position: absolute; top: 14px; right: 14px; }
+  .lm-extra { background: var(--paper); border: 1px solid var(--line); padding: 10px 14px; border-radius: var(--r); color: var(--ink-2); }
+</style>

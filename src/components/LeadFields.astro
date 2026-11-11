@@ -1,0 +1,50 @@
+---
+/** Поля формы заявки — общие для модального окна и встроенных форм */
+import { SITE, messengers } from '../data/site';
+interface Props { source: string; dark?: boolean; button?: string; idp?: string; placeholder?: string }
+const { source, dark = false, button = 'Вызвать замерщика', idp = 'f', placeholder = 'Например: угловая кухня 4 м, Северодвинск, удобно вечером' } = Astro.props;
+---
+<form class:list={['lf', { 'lf--dark': dark }]} action={SITE.forms.endpoint} method="post" data-lead-form novalidate>
+  <input type="hidden" name="source" value={source} data-source />
+  <input type="hidden" name="extra" value="" data-extra />
+  <div class="lf-grid">
+    <div class="field"><label for={`${idp}-name`}>Имя</label><input class="input" id={`${idp}-name`} name="name" required autocomplete="name" placeholder="Как к вам обращаться" /></div>
+    <div class="field"><label for={`${idp}-phone`}>Телефон</label><input class="input" id={`${idp}-phone`} name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 (___) ___-__-__" /></div>
+  </div>
+  <div class="field"><label for={`${idp}-city`}>Город</label>
+    <select class="select" id={`${idp}-city`} name="city"><option>Архангельск</option><option>Северодвинск</option><option>Новодвинск</option><option>Другой населённый пункт</option></select>
+  </div>
+  <div class="field"><label for={`${idp}-msg`}>Комментарий <span class="muted">— необязательно</span></label><textarea class="textarea" id={`${idp}-msg`} name="message" rows="2" placeholder={placeholder}></textarea></div>
+  <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+  <label class="check"><input type="checkbox" name="consent" value="1" required /> <span>Соглашаюсь на обработку персональных данных согласно <a href="/politika-konfidencialnosti/" target="_blank">политике конфиденциальности</a></span></label>
+  <button class:list={['btn btn--accent btn--block', { 'on-dark': dark }]} type="submit">{button}</button>
+  <p class="lf-status small" data-status role="status" aria-live="polite"></p>
+  <div class="lf-done">
+    <strong>Заявка принята</strong>
+    <p>Перезвоним в течение 15 минут в рабочее время ({SITE.hours.label}) и договоримся о замере.</p>
+  </div>
+  <div class="lf-fallback">
+    <a class="btn btn--ghost btn--sm" href={`tel:${SITE.phoneHref}`}>Позвонить {SITE.phone}</a>
+    {messengers().map((m) => <a class="btn btn--ghost btn--sm" href={m.href} target="_blank" rel="noopener">{m.label}</a>)}
+  </div>
+</form>
+
+<style>
+  .lf { display: grid; gap: 14px; position: relative; }
+  .lf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .lf-grid { grid-template-columns: 1fr; } }
+  .lf-status:empty { display: none; }
+  .lf-status { color: var(--accent-2); }
+  .lf-done, .lf-fallback { display: none; }
+  .lf.is-sent > *:not(.lf-done) { display: none; }
+  .lf.is-sent .lf-done { display: grid; gap: 10px; padding: 32px; border: 1px solid var(--line); border-radius: var(--r-lg); text-align: center; }
+  .lf.is-sent .lf-done strong { font: 500 34px/1 var(--serif); }
+  .lf.is-failed .lf-fallback { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lf--dark .field label, .lf--dark .check { color: var(--on-dark-2); }
+  .lf--dark .input, .lf--dark .select, .lf--dark .textarea { background: rgb(242 238 231 / 0.06); border-color: var(--line-dark); color: var(--on-dark); }
+  .lf--dark .input::placeholder, .lf--dark .textarea::placeholder { color: rgb(242 238 231 / 0.4); }
+  .lf--dark .select option { color: #000; }
+  .lf--dark .lf-status { color: var(--oak); }
+  .lf--dark.is-sent .lf-done { border-color: var(--line-dark); }
+  .lf--dark .lf-fallback .btn { --fg-b: var(--on-dark); border-color: var(--line-dark); }
+</style>

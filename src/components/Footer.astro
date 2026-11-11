@@ -1,0 +1,61 @@
+---
+import Logo from './Logo.astro';
+import { SITE, messengers } from '../data/site';
+import { CITIES, NEARBY, cityUrl } from '../data/cities';
+import { KITCHENS, FURNITURE, itemUrl } from '../data/catalog';
+const year = new Date().getFullYear();
+---
+<footer class="ft dark">
+  <div class="wrap">
+    <div class="ft-big" aria-hidden="true">{SITE.brand}</div>
+    <div class="ft-grid">
+      <div class="stack">
+        <Logo />
+        <p class="small ft-about">{SITE.tagline}. Замер, проект, доставка и монтаж — бесплатно в Архангельске, Северодвинске и Новодвинске.</p>
+        <address>
+          <a class="ft-phone num" href={`tel:${SITE.phoneHref}`} data-goal="call">{SITE.phone}</a>
+          <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          <span>{SITE.factory.address}</span>
+          <span>{SITE.hours.label}</span>
+        </address>
+        <div class="row">{messengers().map((m) => <a class="chip" href={m.href} target="_blank" rel="noopener" data-goal="messenger">{m.label}</a>)}</div>
+      </div>
+      <nav aria-label="Кухни"><p class="eyebrow">Кухни на заказ</p><ul>{KITCHENS.map((k) => <li><a href={itemUrl(k)}>{k.name}</a></li>)}</ul></nav>
+      <nav aria-label="Мебель"><p class="eyebrow">Корпусная мебель</p><ul>{FURNITURE.map((k) => <li><a href={itemUrl(k)}>{k.name}</a></li>)}</ul></nav>
+      <nav aria-label="Компания"><p class="eyebrow">Компания</p>
+        <ul>
+          <li><a href="/konstruktor/">Конструктор кухни</a></li>
+          <li><a href="/ceny/">Цены</a></li>
+          <li><a href="/materialy/">Материалы</a></li>
+          <li><a href="/proizvodstvo/">Производство</a></li>
+          <li><a href="/blog/">Журнал</a></li>
+          <li><a href="/voprosy/">Вопросы и ответы</a></li>
+          <li><a href="/kontakty/">Контакты</a></li>
+        </ul>
+        <p class="eyebrow" style="margin-top:28px">География</p>
+        <ul>{CITIES.map((c) => <li><a href={cityUrl(c)}>Кухни {c.in}</a></li>)}</ul>
+      </nav>
+    </div>
+    <p class="small ft-near">Также выезжаем: {NEARBY.join(' · ')}</p>
+    <div class="ft-bottom small">
+      <span>© {year} {SITE.brand}{SITE.legalName ? ` · ${SITE.legalName}` : ''}{SITE.inn ? ` · ИНН ${SITE.inn}` : ''}</span>
+      <a href="/politika-konfidencialnosti/">Политика конфиденциальности</a>
+      <span>Цены на сайте — ориентир, не публичная оферта</span>
+    </div>
+  </div>
+</footer>
+<style>
+  .ft { padding-block: clamp(48px, 7vw, 96px) 32px; overflow: hidden; }
+  .ft-big { font: 500 clamp(90px, 25vw, 420px)/0.74 var(--serif); letter-spacing: -0.04em; color: transparent; -webkit-text-stroke: 1px var(--line-dark); margin: 0 0 clamp(36px, 6vw, 80px) -0.04em; user-select: none; white-space: nowrap; }
+  .ft-grid { display: grid; gap: 40px 32px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  @media (min-width: 1000px) { .ft-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr; } }
+  .ft-about { color: var(--on-dark-2); max-width: 36ch; }
+  address { display: grid; gap: 6px; font-style: normal; font-size: 15px; color: var(--on-dark-2); }
+  address a { text-decoration: none; }
+  .ft-phone { font: 500 clamp(26px, 2.4vw, 34px)/1.1 var(--serif); color: var(--on-dark); }
+  nav ul { display: grid; gap: 10px; margin-top: 16px; font-size: 15px; }
+  nav a { text-decoration: none; color: var(--on-dark-2); transition: color 0.2s; }
+  nav a:hover { color: var(--on-dark); }
+  .ft-near { margin-top: 48px; color: var(--on-dark-2); }
+  .ft-bottom { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line-dark); color: var(--on-dark-2); }
+</style>

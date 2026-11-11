@@ -1,0 +1,122 @@
+---
+/**
+ * Схема кухни (фронтальный вид). Цвета управляются CSS-переменными:
+ * --kf фасады, --kt столешница, --kw стена. Группы .k-* используются конструктором и motion-секцией «Сборка».
+ */
+interface Props { id?: string; class?: string }
+const { id = 'k', class: cls } = Astro.props;
+const base = [
+  { x: 288, w: 116, kind: 'drawers3' },
+  { x: 408, w: 118, kind: 'doors2' },
+  { x: 530, w: 118, kind: 'drawers2' },
+  { x: 652, w: 108, kind: 'door' },
+];
+const wall = [{ x: 288, w: 116 }, { x: 408, w: 118 }, { x: 530, w: 118 }, { x: 652, w: 108 }];
+const ceil = [{ x: 40, w: 120 }, { x: 164, w: 120 }, ...wall];
+---
+<svg class:list={['ksvg', cls]} viewBox="0 0 800 520" role="img" aria-label="Схема кухни: колонны с техникой, нижние и верхние шкафы, столешница">
+  <defs>
+    <linearGradient id={`${id}-glow`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3d6" stop-opacity="0.9" /><stop offset="1" stop-color="#fff3d6" stop-opacity="0" /></linearGradient>
+    <linearGradient id={`${id}-shade`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0" /><stop offset="1" stop-color="#000" stop-opacity="0.16" /></linearGradient>
+    <pattern id={`${id}-grain`} width="34" height="120" patternUnits="userSpaceOnUse"><path d="M4 0c3 30-3 60 1 120M13 0c-2 40 4 70 0 120M22 0c3 26-2 80 2 120M30 0c-3 50 3 90-1 120" fill="none" stroke="#000" stroke-opacity="0.13" stroke-width="1" /></pattern>
+    <pattern id={`${id}-tile`} width="59" height="24.500" patternUnits="userSpaceOnUse"><path d="M0 0h59M0 24.500h59M0 0v24.500" fill="none" stroke="#000" stroke-opacity="0.08" /></pattern>
+  </defs>
+
+  <rect class="k-wallbg" x="0" y="0" width="800" height="470" />
+  <rect class="k-floor" x="0" y="470" width="800" height="50" />
+
+  <!-- Фартук -->
+  <g class="k-splash">
+    <rect class="k-splash-base" x="288" y="224" width="472" height="98" />
+    <rect class="k-splash-tile" x="288" y="224" width="472" height="98" fill={`url(#${id}-tile)`} />
+    <rect class="k-splash-panel" x="288" y="224" width="472" height="98" />
+  </g>
+
+  <!-- Колонны -->
+  <g class="k-tall">
+    <g class="k-part" style="--d:0">
+      <rect class="k-f" x="40" y="106" width="120" height="196" /><rect class="k-f" x="40" y="306" width="120" height="150" />
+      <rect class="k-h" x="148" y="180" width="3" height="60" /><rect class="k-h" x="148" y="320" width="3" height="60" />
+    </g>
+    <g class="k-part" style="--d:1">
+      <rect class="k-f" x="164" y="106" width="120" height="84" />
+      <rect class="k-appl" x="164" y="194" width="120" height="104" rx="2" /><rect x="176" y="218" width="96" height="64" rx="3" fill="#0d0e0d" /><rect x="176" y="204" width="96" height="3" rx="1.500" fill="#b9b6ae" />
+      <rect class="k-f" x="164" y="302" width="120" height="74" /><rect class="k-f" x="164" y="380" width="120" height="76" />
+      <rect class="k-h" x="194" y="312" width="60" height="3" /><rect class="k-h" x="194" y="390" width="60" height="3" /><rect class="k-h" x="194" y="178" width="60" height="3" />
+    </g>
+    <rect class="k-plinth" x="40" y="456" width="244" height="14" />
+  </g>
+
+  <!-- Низ -->
+  <g class="k-base">
+    {base.map((b, n) => (
+      <g class="k-part" style={`--d:${n}`}>
+        {b.kind === 'drawers3' && <><rect class="k-f" x={b.x} y="340" width={b.w} height="34" /><rect class="k-f" x={b.x} y="378" width={b.w} height="37" /><rect class="k-f" x={b.x} y="419" width={b.w} height="37" />{[350, 388, 429].map((y) => <rect class="k-h" x={b.x + b.w / 2 - 26} y={y} width="52" height="3" />)}</>}
+        {b.kind === 'drawers2' && <><rect class="k-f" x={b.x} y="340" width={b.w} height="56" /><rect class="k-f" x={b.x} y="400" width={b.w} height="56" />{[350, 410].map((y) => <rect class="k-h" x={b.x + b.w / 2 - 26} y={y} width="52" height="3" />)}</>}
+        {b.kind === 'doors2' && <><rect class="k-f" x={b.x} y="340" width={b.w / 2 - 2} height="116" /><rect class="k-f" x={b.x + b.w / 2 + 2} y="340" width={b.w / 2 - 2} height="116" /><rect class="k-h" x={b.x + b.w / 2 - 12} y="350" width="3" height="44" /><rect class="k-h" x={b.x + b.w / 2 + 9} y="350" width="3" height="44" /></>}
+        {b.kind === 'door' && <><rect class="k-f" x={b.x} y="340" width={b.w} height="116" /><rect class="k-h" x={b.x + 10} y="350" width="3" height="44" /></>}
+      </g>
+    ))}
+    <rect class="k-gola" x="288" y="336" width="472" height="5" />
+    <rect class="k-plinth" x="288" y="456" width="472" height="14" />
+  </g>
+
+  <!-- Столешница, мойка, варочная панель -->
+  <g class="k-top">
+    <rect class="k-t" x="285" y="322" width="478" height="14" />
+    <rect x="545" y="319" width="88" height="3" rx="1" fill="#101110" />
+    <path d="M462 322v-34a12 12 0 0 1 24 0v4" fill="none" stroke="#bdb9b0" stroke-width="4" stroke-linecap="round" />
+  </g>
+
+  <!-- Верх -->
+  <g class="k-wall">
+    {wall.map((b, n) => (
+      <g class="k-part" style={`--d:${n}`}><rect class="k-f" x={b.x} y="106" width={b.w} height="118" /><rect class="k-h" x={b.x + b.w / 2 - 26} y="210" width="52" height="3" /></g>
+    ))}
+    <rect class="k-shade" x="288" y="106" width="472" height="118" fill={`url(#${id}-shade)`} />
+  </g>
+
+  <!-- Антресоли до потолка -->
+  <g class="k-ceil">
+    {ceil.map((b, n) => <g class="k-part" style={`--d:${n}`}><rect class="k-f" x={b.x} y="36" width={b.w} height="66" /></g>)}
+  </g>
+
+  <!-- Текстура шпона -->
+  <rect class="k-grain" x="40" y="36" width="720" height="420" fill={`url(#${id}-grain)`} />
+
+  <!-- Подсветка -->
+  <rect class="k-light" x="288" y="224" width="472" height="70" fill={`url(#${id}-glow)`} />
+
+  <!-- Остров -->
+  <g class="k-island">
+    <rect class="k-t" x="250" y="404" width="420" height="12" />
+    <rect class="k-f k-f--dim" x="258" y="416" width="404" height="92" />
+    <path d="M359 416v92M460 416v92M561 416v92" stroke="rgb(0 0 0 / 0.35)" stroke-width="2" />
+    <rect class="k-plinth" x="262" y="508" width="396" height="10" />
+  </g>
+</svg>
+
+<style is:global>
+  .ksvg { --kf: #33363a; --kt: #c9c2b6; --kw: #e7e2d9; width: 100%; height: auto; }
+  .ksvg .k-wallbg { fill: var(--kw); }
+  .ksvg .k-floor { fill: color-mix(in srgb, var(--kw) 78%, #6b5a45); }
+  .ksvg .k-f { fill: var(--kf); stroke: rgb(0 0 0 / 0.28); stroke-width: 1; transition: fill 0.5s; }
+  .ksvg .k-f--dim { fill: color-mix(in srgb, var(--kf) 88%, #000); }
+  .ksvg .k-t { fill: var(--kt); transition: fill 0.5s; }
+  .ksvg .k-plinth { fill: #1a1b1a; }
+  .ksvg .k-appl { fill: #1c1d1c; }
+  .ksvg .k-h { fill: color-mix(in srgb, var(--kf) 35%, #d8c9a8); transition: opacity 0.3s; }
+  .ksvg .k-gola { fill: #111; opacity: 0; transition: opacity 0.3s; }
+  .ksvg .k-splash-base { fill: color-mix(in srgb, var(--kw) 92%, #fff); }
+  .ksvg .k-splash-panel { fill: var(--kt); opacity: 0; transition: opacity 0.4s, fill 0.5s; }
+  .ksvg .k-light, .ksvg .k-grain, .ksvg .k-island, .ksvg .k-ceil { opacity: 0; transition: opacity 0.5s; }
+  .ksvg .k-ceil { transform: translateY(-16px); transition: opacity 0.5s, transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1); }
+  .ksvg .k-island { transform: translateY(20px); transition: opacity 0.5s, transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1); }
+  .ksvg.has-ceiling .k-ceil, .ksvg.has-island .k-island { opacity: 1; transform: none; }
+  .ksvg.has-light .k-light { opacity: 1; }
+  .ksvg.has-grain .k-grain { opacity: 1; }
+  .ksvg.has-panel .k-splash-panel { opacity: 1; }
+  .ksvg.has-panel .k-splash-tile { opacity: 0; }
+  .ksvg.has-gola .k-h { opacity: 0; }
+  .ksvg.has-gola .k-gola { opacity: 1; }
+</style>

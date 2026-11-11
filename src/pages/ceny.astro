@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Faq from '../components/Faq.astro';
+import CtaLead from '../components/CtaLead.astro';
+import Icon from '../components/Icon.astro';
+import { SITE, years } from '../data/site';
+import { PRICE_ROWS, INCLUDED, FAQ } from '../data/content';
+import { breadcrumbs, faq } from '../lib/schema';
+const crumbs = [{ name: 'Цены', url: '/ceny/' }];
+const faqs = FAQ.filter((f) => f.tag === 'Цена');
+const offers = PRICE_ROWS.map((r) => ({ '@type': 'Offer', name: r.name, priceCurrency: 'RUB', priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'RUB', minPrice: r.from }, seller: { '@type': 'Organization', name: SITE.brand } }));
+---
+<Base title="Цены на кухни на заказ в Архангельске — прайс от производителя" description={`Цены на кухни и корпусную мебель на заказ: ЛДСП от 32 000 ₽ за п. м, МДФ в плёнке от 39 000, эмаль от 58 000. Столешницы, шкафы-купе, гардеробные. Гарантия ${years(SITE.promises.guaranteeMonths)}.`} schema={[breadcrumbs(crumbs), faq(faqs), { '@context': 'https://schema.org', '@type': 'OfferCatalog', name: 'Цены на кухни и мебель на заказ', itemListElement: offers }]}>
+  <PageHead crumbs={crumbs} eyebrow="Прайс" title="Сколько стоит <em>кухня на заказ</em>" lead="Цены «от» — ориентир для типовой комплектации. Итог зависит от размеров, материалов и фурнитуры; фиксируется в договоре после замера.">
+    <div class="row"><a class="btn btn--accent" href="/konstruktor/">Рассчитать в конструкторе <Icon name="arrow" class="arr" /></a><button class="btn btn--ghost" data-lead="Цены">Получить точный расчёт</button></div>
+  </PageHead>
+  <section class="sec--tight sec">
+    <div class="wrap">
+      <div class="table-scroll"><table>
+        <thead><tr><th>Позиция</th><th>Что входит</th><th>Цена</th></tr></thead>
+        <tbody>{PRICE_ROWS.map((r) => <tr class="reveal"><td><b>{r.name}</b></td><td class="muted">{r.what}</td><td class="num nowrap"><b>от {r.from.toLocaleString('ru-RU')} ₽</b> / {r.unit}</td></tr>)}</tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:20px">Цены не являются публичной офертой. Замер, 3D-проект, доставка и монтаж в Архангельске, Северодвинске и Новодвинске — бесплатно.</p>
+    </div>
+  </section>
+  <section class="sec paper">
+    <div class="wrap">
+      <div class="sec-head"><p class="eyebrow">Что в цене</p><h2 class="h-lg">Всё, <em>что нужно</em> для готовой кухни</h2></div>
+      <ul class="inc">{INCLUDED.map((x, i) => <li class="reveal" style={`--i:${i}`}><span class="num">{String(i + 1).padStart(2, '0')}</span><h3 class="h-sm">{x.t}</h3><p class="small muted">{x.d}</p></li>)}</ul>
+    </div>
+  </section>
+  <section class="sec"><div class="wrap"><div class="sec-head"><p class="eyebrow">Вопросы</p><h2 class="h-lg">Про <em>деньги</em></h2></div><Faq items={faqs} /></div></section>
+  <CtaLead source="Цены — форма" />
+</Base>
+<style>
+  .inc { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 0 28px; }
+  .inc li { display: grid; gap: 8px; align-content: start; padding: 22px 0; border-top: 1px solid var(--line); }
+  .inc .num { font-size: 12px; color: var(--accent); }
+</style>

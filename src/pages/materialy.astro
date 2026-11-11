@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Pic from '../components/Pic.astro';
+import CtaLead from '../components/CtaLead.astro';
+import { MATERIALS } from '../data/content';
+import { breadcrumbs } from '../lib/schema';
+const crumbs = [{ name: 'Материалы', url: '/materialy/' }];
+---
+<Base title="Материалы для кухни: фасады, столешницы, фурнитура — сравнение и цены" description="Справочник материалов для кухни на заказ: ЛДСП, МДФ в плёнке и эмали, шпон, HPL, кварц, акриловый камень, фурнитура Blum и Hettich. Плюсы, минусы, цены." schema={[breadcrumbs(crumbs)]}>
+  <PageHead crumbs={crumbs} eyebrow="Справочник" title="Из чего делают <em>хорошую кухню</em>" lead="Честное сравнение материалов: где переплата, где экономия не оправдана. Образцы всего перечисленного можно потрогать на замере и в цехе." />
+  {MATERIALS.map((m, k) => (
+    <section class:list={['sec', { paper: k % 2 === 0 }]} id={m.id}>
+      <div class="wrap">
+        <div class="mt-head"><div class="stack"><p class="eyebrow">{m.title}</p><h2 class="h-lg">{m.title}</h2><p class="lead">{m.intro}</p></div><Pic name={m.img} alt={`${m.title} для кухни — образцы материалов`} ratio="4 / 3" viz reveal sizes="(max-width: 900px) 100vw, 40vw" /></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Вариант</th><th>Цена</th><th>Плюсы</th><th>Минусы</th><th>Подходит</th></tr></thead>
+          <tbody>{m.items.map((i) => <tr><td><b>{i.name}</b></td><td class="num nowrap">{i.price}</td><td>{i.plus}</td><td class="muted">{i.minus}</td><td>{i.best}</td></tr>)}</tbody>
+        </table></div>
+      </div>
+    </section>
+  ))}
+  <CtaLead source="Материалы — форма" title="Потрогайте <em>образцы</em>" text="Дизайнер привезёт на замер образцы фасадов, столешниц и фурнитуры — выбирать проще, когда материал в руках." img="m-facades" />
+</Base>
+<style>
+  .mt-head { display: grid; gap: 28px; margin-bottom: clamp(28px, 4vw, 56px); }
+  @media (min-width: 900px) { .mt-head { grid-template-columns: 1.2fr 0.8fr; align-items: end; gap: 56px; } }
+  td { min-width: 150px; }
+</style>

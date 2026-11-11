@@ -1,0 +1,20 @@
+---
+import Crumbs from './Crumbs.astro';
+interface Props { crumbs: { name: string; url: string }[]; eyebrow?: string; title: string; lead?: string; dark?: boolean }
+const { crumbs, eyebrow, title, lead, dark = false } = Astro.props;
+---
+<section class:list={['ph', { dark }]}>
+  <div class="wrap ph-in">
+    <Crumbs items={crumbs} />
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1 class="h-lg split"><span class="ln"><span set:html={title} /></span></h1>
+    {lead && <p class="lead reveal">{lead}</p>}
+    <slot />
+  </div>
+</section>
+<style>
+  .ph { padding-block: clamp(28px, 4vw, 56px) clamp(40px, 6vw, 80px); }
+  .ph-in { display: grid; gap: 22px; }
+  .ph .lead { max-width: 62ch; }
+  .ph h1 { max-width: 18ch; }
+</style>

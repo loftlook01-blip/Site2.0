@@ -1,0 +1,43 @@
+---
+/** Финальный блок заявки: тёмный, с картинкой и формой */
+import LeadFields from './LeadFields.astro';
+import Pic from './Pic.astro';
+import Icon from './Icon.astro';
+import { SITE, messengers } from '../data/site';
+interface Props { source: string; title?: string; text?: string; img?: string }
+const { source, title = 'Начнём с <em>бесплатного</em> замера', text = 'Дизайнер приедет с образцами фасадов и столешниц, сделает замер и через два дня покажет вашу кухню в 3D со сметой. Это ни к чему не обязывает.', img = 'cta' } = Astro.props;
+---
+<section class="cta dark sec" id="zayavka">
+  <div class="wrap cta-grid">
+    <div class="stack cta-text">
+      <p class="eyebrow">Заявка на замер</p>
+      <h2 class="h-lg" set:html={title} />
+      <p class="lead">{text}</p>
+      <ul class="cta-list">
+        <li><Icon name="ruler" /> Замер в Архангельске, Северодвинске и Новодвинске — 0 ₽</li>
+        <li><Icon name="cube" /> 3D-проект и смета по позициям — 0 ₽</li>
+        <li><Icon name="doc" /> Цена и срок фиксируются в договоре</li>
+      </ul>
+      <div class="row">
+        <a class="link num" href={`tel:${SITE.phoneHref}`} data-goal="call">{SITE.phone}</a>
+        {messengers().map((m) => <a class="chip" href={m.href} target="_blank" rel="noopener" data-goal="messenger">{m.label}</a>)}
+      </div>
+    </div>
+    <div class="cta-form">
+      <LeadFields source={source} dark idp={`cta-${source.length}`} />
+    </div>
+  </div>
+  <div class="cta-bg" aria-hidden="true"><Pic name={img} alt="" ratio="auto" sizes="100vw" /></div>
+</section>
+<style>
+  .cta { position: relative; isolation: isolate; overflow: hidden; }
+  .cta-bg { position: absolute; inset: 0; z-index: -1; opacity: 0.28; }
+  .cta-bg :global(.pic) { height: 100%; border-radius: 0; background: none; }
+  .cta-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, var(--dark) 20%, transparent 120%); }
+  .cta-grid { display: grid; gap: 40px; }
+  @media (min-width: 960px) { .cta-grid { grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center; } }
+  .cta-list { display: grid; gap: 12px; margin-block: 8px; }
+  .cta-list li { display: flex; gap: 12px; align-items: center; color: var(--on-dark-2); }
+  .cta-list :global(svg) { width: 20px; height: 20px; color: var(--oak); flex: none; }
+  .cta-form { padding: clamp(20px, 3vw, 36px); border: 1px solid var(--line-dark); border-radius: var(--r-lg); background: rgb(21 22 20 / 0.6); backdrop-filter: blur(14px); }
+</style>

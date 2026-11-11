@@ -12,7 +12,7 @@ const crumbs = [{ name: 'Материалы', url: '/materialy/' }];
   {MATERIALS.map((m, k) => (
     <section class:list={['sec', { paper: k % 2 === 0 }]} id={m.id}>
       <div class="wrap">
-        <div class="mt-head"><div class="stack"><p class="eyebrow">{m.title}</p><h2 class="h-lg">{m.title}</h2><p class="lead">{m.intro}</p></div><Pic name={m.img} alt={`${m.title} для кухни — образцы материалов`} ratio="4 / 3" viz reveal sizes="(max-width: 900px) 100vw, 40vw" /></div>
+        <div class="mt-head"><div class="stack"><p class="eyebrow">{m.title}</p><h2 class="h-lg">{m.title}</h2><p class="lead">{m.intro}</p></div><Pic name={m.img} alt={`${m.title} для кухни — образцы материалов`} ratio="4 / 3" reveal sizes="(max-width: 900px) 100vw, 40vw" /></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Вариант</th><th>Цена</th><th>Плюсы</th><th>Минусы</th><th>Подходит</th></tr></thead>
           <tbody>{m.items.map((i) => <tr><td><b>{i.name}</b></td><td class="num nowrap">{i.price}</td><td>{i.plus}</td><td class="muted">{i.minus}</td><td>{i.best}</td></tr>)}</tbody>

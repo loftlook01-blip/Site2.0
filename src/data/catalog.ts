@@ -291,6 +291,10 @@ export const FURNITURE: Item[] = [
   },
 ];
 
+import { existsSync } from 'node:fs';
+/** Ракурсы: <img>, <img>-2, <img>-3 — берутся те, что реально лежат в public/images */
+export const gallery = (i: Item) => [i.img, `${i.img}-2`, `${i.img}-3`].filter((n) => existsSync(`public/images/${n}.webp`));
+
 export const ALL_ITEMS = [...KITCHENS, ...FURNITURE];
 export const itemUrl = (i: Item) => (i.group === 'furniture' ? `/mebel/${i.slug}/` : `/kuhni/${i.slug}/`);
 export const priceLabel = (i: Item) => `от ${new Intl.NumberFormat('ru-RU').format(i.from)} ₽${i.unit === 'п. м' ? ' / п. м' : ''}`;

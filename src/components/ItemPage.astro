@@ -10,13 +10,14 @@ import Faq from './Faq.astro';
 import CtaLead from './CtaLead.astro';
 import { SITE, years } from '../data/site';
 import { CITIES, cityUrl } from '../data/cities';
-import { KITCHENS, FURNITURE, itemUrl, priceLabel, type Item } from '../data/catalog';
+import { KITCHENS, FURNITURE, itemUrl, priceLabel, gallery, type Item } from '../data/catalog';
 import { INCLUDED, FAQ } from '../data/content';
 import { breadcrumbs, faq, product } from '../lib/schema';
 interface Props { item: Item }
 const { item } = Astro.props;
 const P = SITE.promises;
 const isK = item.group !== 'furniture';
+const shots = gallery(item).slice(1);
 const root = isK ? { name: 'Кухни на заказ', url: '/kuhni/' } : { name: 'Корпусная мебель', url: '/mebel/' };
 const crumbs = [root, { name: item.name, url: itemUrl(item) }];
 const extra = FAQ.filter((f) => ['Цена', 'Сроки'].includes(f.tag)).slice(isK ? 1 : 2, isK ? 4 : 4);
@@ -43,9 +44,15 @@ const description = `${item.h1} в Архангельске, Северодви�
           <button class="btn btn--ghost" data-lead={item.name} data-lead-extra={item.name}>Вызвать замерщика</button>
         </div>
       </div>
-      <Pic name={item.img} alt={`${item.h1} — пример проекта, ${SITE.brand}`} ratio="4 / 3" eager viz reveal sizes="(max-width: 960px) 100vw, 55vw" class="ip-pic" />
+      <Pic name={item.img} alt={`${item.h1} — пример проекта, ${SITE.brand}`} ratio="4 / 3" eager reveal sizes="(max-width: 960px) 100vw, 55vw" class="ip-pic" />
     </div>
   </section>
+
+  {shots.length > 0 && (
+    <section class="ip-shots"><div class="wrap ip-shots-grid" data-n={shots.length}>
+      {shots.map((n, i) => <Pic name={n} alt={`${item.h1} — ${i === 0 ? 'другой ракурс' : 'детали'}`} ratio="16 / 10" zoom reveal i={i} sizes="(max-width: 760px) 100vw, 50vw" />)}
+    </div></section>
+  )}
 
   <section class="sec--tight sec">
     <div class="wrap ip-answer">
@@ -116,6 +123,8 @@ const description = `${item.h1} в Архангельске, Северодви�
   .ip-price { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0 clamp(20px, 3vw, 44px); padding-block: 18px; border-block: 1px solid var(--line); }
   .ip-price p { display: grid; gap: 4px; }
   .ip-price b { font: 500 clamp(19px, 1.9vw, 26px)/1.1 var(--serif); }
+  .ip-shots-grid { display: grid; gap: clamp(12px, 1.6vw, 24px); }
+  @media (min-width: 760px) { .ip-shots-grid[data-n='2'] { grid-template-columns: 1fr 1fr; } }
   .ip-answer { display: grid; gap: 20px; max-width: 980px; margin-inline: auto; }
   .ip-cities { display: flex; flex-wrap: wrap; gap: 8px; }
   .pts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0 clamp(24px, 3vw, 48px); }

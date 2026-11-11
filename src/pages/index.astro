@@ -146,7 +146,7 @@ const schema = [faq(homeFaq), howTo('Как заказать кухню на з�
       <div class="work-grid">
         {WORKSHOP.map((w, i) => (
           <article class="work-i" style={`--shift:${[0, 56, 112][i]}px`}>
-            <div data-parallax={[26, -14, 30][i]} class="work-pic"><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="3 / 4" viz reveal i={i} sizes="(max-width: 760px) 100vw, 33vw" /></div>
+            <div data-parallax={[26, -14, 30][i]} class="work-pic"><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="3 / 4" reveal i={i} sizes="(max-width: 760px) 100vw, 33vw" /></div>
             <h3 class="h-md"><span class="num work-n">0{i + 1}</span>{w.t}</h3>
             <p class="small work-d">{w.d}</p>
           </article>

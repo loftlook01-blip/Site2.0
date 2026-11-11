@@ -4,7 +4,7 @@
  */
 import { SITE, messengers } from '../data/site';
 import { CITIES, PRIMARY_CITY, NEARBY, cityUrl, type City } from '../data/cities';
-import { itemUrl, type Item } from '../data/catalog';
+import { itemUrl, gallery, type Item } from '../data/catalog';
 import { articleUrl, type Article } from '../data/articles';
 
 export const abs = (path: string) => new URL(path, SITE.url).href;
@@ -94,7 +94,7 @@ export function product(i: Item) {
     '@id': `${url}#product`,
     name: i.h1,
     description: i.answer,
-    image: abs(`/images/${i.img}.webp`),
+    image: gallery(i).map((n) => abs(`/images/${n}.webp`)),
     url,
     sku: i.slug,
     category: i.group === 'furniture' ? 'Корпусная мебель на заказ' : 'Кухни на заказ',

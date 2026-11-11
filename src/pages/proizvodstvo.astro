@@ -17,7 +17,7 @@ const F = SITE.factory;
   <section class="sec--tight sec">
     <div class="wrap pr-grid">
       {WORKSHOP.map((w, i) => (
-        <article class="reveal" style={`--i:${i}`}><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="4 / 3" viz zoom sizes="(max-width: 900px) 100vw, 33vw" /><h3 class="h-md">{w.t}</h3><p class="muted">{w.d}</p></article>
+        <article class="reveal" style={`--i:${i}`}><Pic name={w.img} alt={`${w.t} — производство кухонь в Архангельске`} ratio="4 / 3" zoom sizes="(max-width: 900px) 100vw, 33vw" /><h3 class="h-md">{w.t}</h3><p class="muted">{w.d}</p></article>
       ))}
     </div>
   </section>

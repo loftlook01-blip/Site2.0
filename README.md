@@ -15,7 +15,9 @@ npm run build    # готовый сайт в dist/
 Отдельная страница под каждый запрос (стиль / планировка / мебель / город), JSON-LD (LocalBusiness, Product, Service, FAQPage, HowTo, Article, BreadcrumbList), sitemap, robots с Clean-param, YML-фид `/feed.yml`, RSS, `llms.txt` и `llms-full.txt` для нейросетей.
 
 ## Изображения
-Сейчас в `public/images/` лежат **временные 3D-визуализации** (Blender, `scripts/render3d/`). Они должны быть заменены фотореалистичными: `npm run images <папка>` конвертирует PNG/JPG в WebP (`<имя>.webp` и `<имя>-800.webp`). Имена файлов: `hero`, `cta`, `k-*` (кухни), `f-*` (мебель), `w-*` (цех), `m-*` (материалы).
+Фотографии в `public/images/` сгенерированы нейросетью (`scripts/gen-images.py`, модель nano-banana-2.1): для каждой кухни и мебели — основной кадр и до двух других ракурсов (`<имя>`, `<имя>-2`, `<имя>-3`), за окнами — типовая застройка Архангельска.
+Перегенерация: `IMG_API_KEY=… python3 scripts/gen-images.py <папка> [имя …]`, затем `npm run images <папка>`. Ракурсы на странице показываются автоматически, если файлы есть.
+Когда появятся фото реальных работ — положите их под теми же именами.
 
 ## Заявки
 Формы шлют JSON на `/api/lead.php` → Telegram и/или e-mail (`public/api/config.example.php` → `config.php` на сервере).

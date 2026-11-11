@@ -15,7 +15,7 @@ const more = ARTICLES.filter((x) => x.slug !== a.slug).slice(0, 2);
   <article class="wrap ar">
     <Crumbs items={crumbs} />
     <header class="stack" style="gap:20px"><p class="small muted">{fmtDate(a.date)} · {a.minutes} мин чтения</p><h1 class="h-lg" style="max-width:20ch">{a.title}</h1></header>
-    <Pic name={a.img} alt={a.title} ratio="16 / 8" eager viz sizes="100vw" />
+    <Pic name={a.img} alt={a.title} ratio="16 / 8" eager sizes="100vw" />
     <div class="prose">
       <div class="answer"><b>Коротко</b>{a.answer}</div>
       <Fragment set:html={a.body} />

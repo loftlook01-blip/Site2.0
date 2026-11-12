@@ -32,3 +32,9 @@ npm run build    # готовый сайт в dist/
 5. Проверка: отправьте заявку с сайта и пройдите `/calc` в боте.
 
 Папки `api/leads/` и `api/state/` закрыты от веба через `.htaccess`. На nginx добавьте `location ~ ^/api/(leads|state|_lib|config) { deny all; }`.
+
+## Выкладка на хостинг (тест и запуск)
+1. **Домен и хостинг** (PHP 8+, бесплатный SSL, серверы в РФ — Beget, Timeweb, REG.RU) — купить у одного провайдера проще всего: домен привяжется сам.
+2. **Тест:** соберите с закрытием от поисковиков: `SITE_URL=https://тест-домен PUBLIC_NOINDEX=1 npm run build`, загрузите содержимое `dist/` в корень сайта (файловый менеджер или FTP). Бот и заявки заработают после настройки `api/config.php` (см. выше).
+3. **Автодеплой:** `.github/workflows/deploy.yml` — секреты `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`, `FTP_DIR` и переменные `SITE_URL`, `NOINDEX=1` (на тесте). Запуск: Actions → Deploy → Run workflow. `api/config.php`, заявки и состояние бота при выгрузке не трогаются.
+4. **Боевой запуск:** уберите `NOINDEX`, поставьте реальный `SITE_URL`, заполните TODO в `src/data/site.ts`, затем регистрация в Яндекс Вебмастере и Google Search Console.

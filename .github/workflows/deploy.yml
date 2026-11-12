@@ -1,0 +1,35 @@
+# Сборка сайта и выгрузка на хостинг по FTPS.
+# Запуск: вкладка Actions → «Deploy» → Run workflow (или автоматически при пуше в main).
+# Настройка: Settings → Secrets and variables → Actions:
+#   Secrets:   FTP_HOST, FTP_USER, FTP_PASSWORD, FTP_DIR (например /www/ваш-домен.ru/ — с косой чертой на конце)
+#   Variables: SITE_URL (https://ваш-домен.ru), NOINDEX (1 — пока тестируете, пусто — для боевого запуска)
+name: Deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          PUBLIC_NOINDEX: ${{ vars.NOINDEX }}
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_DIR }}
+          # настройки бота и заявки живут на сервере — выгрузка их не трогает
+          exclude: |
+            **/api/config.php
+            **/api/leads/**
+            **/api/state/**

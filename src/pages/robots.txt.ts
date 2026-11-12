@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { SITE } from '../data/site';
+import { SITE, NOINDEX } from '../data/site';
 
 export const GET: APIRoute = () =>
   new Response(
-    `User-agent: *
+    NOINDEX ? 'User-agent: *\nDisallow: /\n' : `User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /spasibo/

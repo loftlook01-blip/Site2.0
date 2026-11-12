@@ -4,9 +4,12 @@
  *
  * ⚠️ Перед запуском замените значения с пометкой TODO на реальные.
  */
+/** Тестовая сборка (PUBLIC_NOINDEX=1): сайт закрыт от поисковиков, пока вы его проверяете */
+export const NOINDEX = typeof process !== 'undefined' && process.env?.PUBLIC_NOINDEX === '1';
+
 export const SITE = {
   /** TODO: финальный домен (без слеша в конце) */
-  url: 'https://dvina-kuhni.ru',
+  url: (typeof process !== 'undefined' && process.env?.SITE_URL) || 'https://dvina-kuhni.ru', // при сборке можно задать SITE_URL=https://ваш-домен
   /** TODO: рабочее название. Меняется здесь + в scripts/og.mjs (картинка превью и иконки) */
   brand: 'ДВИНА',
   brandSub: 'кухни и мебель на заказ',

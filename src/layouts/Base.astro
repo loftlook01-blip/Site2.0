@@ -13,7 +13,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import LeadModal from '../components/LeadModal.astro';
 import SiteWidgets from '../components/SiteWidgets.astro';
-import { SITE } from '../data/site';
+import { SITE, NOINDEX } from '../data/site';
 import { PRIMARY_CITY, type City } from '../data/cities';
 import { organization, website } from '../lib/schema';
 
@@ -30,7 +30,8 @@ interface Props {
   published?: string;
 }
 
-const { title, description, city = PRIMARY_CITY, schema = [], noindex = false, ogImage = '/og.jpg', ogType = 'website', preload, overlay = false, published } = Astro.props;
+const { title, description, city = PRIMARY_CITY, schema = [], noindex: noindexProp = false, ogImage = '/og.jpg', ogType = 'website', preload, overlay = false, published } = Astro.props;
+const noindex = noindexProp || NOINDEX;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const fullTitle = title.includes(SITE.brand) || title.length > 58 ? title : `${title} | ${SITE.brand}`;
 const ld = [organization(), website(), ...schema];

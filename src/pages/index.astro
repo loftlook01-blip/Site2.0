@@ -5,7 +5,7 @@ import Pic from '../components/Pic.astro';
 import Marquee from '../components/Marquee.astro';
 import ItemCard from '../components/ItemCard.astro';
 import Assembly from '../components/Assembly.astro';
-import Configurator from '../components/Configurator.astro';
+import QuickCalc from '../components/QuickCalc.astro';
 import Compare from '../components/Compare.astro';
 import Steps from '../components/Steps.astro';
 import CityMap from '../components/CityMap.astro';
@@ -114,14 +114,14 @@ const schema = [faq(homeFaq), howTo('Как заказать кухню на з�
   <!-- ═════ Сборка (motion) ═════ -->
   <Assembly />
 
-  <!-- ═════ Конструктор ═════ -->
+  <!-- ═════ Быстрый расчёт + запись на замер ═════ -->
   <section class="sec" id="konstruktor">
     <div class="wrap">
       <div class="sec-head sec-head--split">
-        <div class="stack"><p class="eyebrow">Конструктор</p><h2 class="h-lg split"><span class="ln"><span>Соберите кухню</span></span><span class="ln" style="--i:1"><span>и узнайте <em>цену</em></span></span></h2></div>
-        <p class="lead">Выберите планировку, фасады и столешницу — схема и стоимость обновятся сразу. Расчёт можно отправить нам: дизайнер приедет на замер уже с подходящими образцами.</p>
+        <div class="stack"><p class="eyebrow">Калькулятор</p><h2 class="h-lg split"><span class="ln"><span>Сколько стоит</span></span><span class="ln" style="--i:1"><span>ваша <em>кухня</em></span></span></h2></div>
+        <div class="stack"><p class="lead">Четыре вопроса — и вы видите ориентир цены. Сразу можно записаться на бесплатный замер: дизайнер приедет с образцами и уточнит стоимость.</p><a class="link" href="/konstruktor/">Подробный конструктор со схемой <Icon name="arrow" /></a></div>
       </div>
-      <Configurator />
+      <QuickCalc />
     </div>
   </section>
 

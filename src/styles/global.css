@@ -93,6 +93,7 @@ ul, ol { padding: 0; list-style: none; }
 .btn--sm { min-height: 42px; padding: 0 18px; font-size: 14px; }
 .btn--block { width: 100%; }
 .link { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; padding-bottom: 3px; transition: background-size 0.4s var(--ease), color 0.2s; }
+button.link { border: 0; padding: 0 0 3px; cursor: pointer; }
 .link:hover { background-size: 0 1px; background-position: 100% 100%; color: var(--accent); }
 .link svg { width: 16px; height: 16px; }
 .icon-btn { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: transparent; }

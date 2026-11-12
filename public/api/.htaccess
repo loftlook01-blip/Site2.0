@@ -1,0 +1,11 @@
+# Служебные файлы и данные заявок — не отдавать по HTTP
+<FilesMatch "^(_lib\.php|config\.php|config\.example\.php)$">
+  Require all denied
+</FilesMatch>
+<IfModule !mod_authz_core.c>
+  <FilesMatch "^(_lib\.php|config\.php|config\.example\.php)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>
+Options -Indexes

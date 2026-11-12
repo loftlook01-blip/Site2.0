@@ -24,6 +24,18 @@ function maskPhone(input: HTMLInputElement) {
   input.addEventListener('focus', () => { if (!input.value) input.value = '+7 '; });
 }
 
+/** UTM-метки и источник: запоминаем при первом заходе, отправляем с заявкой — видно, какая реклама работает */
+function utm(): string {
+  try {
+    const q = new URLSearchParams(location.search);
+    const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'yclid', 'gclid'];
+    const now = keys.filter((k) => q.get(k)).map((k) => `${k.replace('utm_', '')}=${q.get(k)}`).join('&');
+    if (now) sessionStorage.setItem('utm', now);
+    else if (!sessionStorage.getItem('utm') && document.referrer && !document.referrer.includes(location.host)) sessionStorage.setItem('utm', 'ref=' + new URL(document.referrer).host);
+    return sessionStorage.getItem('utm') || '';
+  } catch { return ''; }
+}
+
 export function bindForms(root: ParentNode = document) {
   root.querySelectorAll<HTMLFormElement>('form[data-lead-form]:not([data-bound])').forEach((form) => {
     form.dataset.bound = '1';
@@ -39,6 +51,7 @@ export function bindForms(root: ParentNode = document) {
         return;
       }
       data.page = location.pathname;
+      data.utm = utm();
       data.consent = data.consent ? '1' : '';
       btn && (btn.disabled = true);
       status && (status.textContent = 'Отправляем…');

@@ -21,6 +21,8 @@ export const SITE = {
   phoneHref: '+78182000000', // TODO
   email: 'zakaz@dvina-kuhni.ru', // TODO
   telegram: '', // TODO: https://t.me/username — кнопка появится, когда заполнено
+  /** TODO: ссылка на Telegram-бота (https://t.me/имя_бота) — на сайте появятся кнопки «Рассчитать в Telegram» */
+  telegramBot: '',
   whatsapp: '', // TODO: https://wa.me/7XXXXXXXXXX
   max: '', // TODO: ссылка на мессенджер MAX
   vk: '', // TODO: https://vk.com/…

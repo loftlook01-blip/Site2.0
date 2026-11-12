@@ -14,6 +14,15 @@ const { source, dark = false, button = 'Вызвать замерщика', idp 
   <div class="field"><label for={`${idp}-city`}>Город</label>
     <select class="select" id={`${idp}-city`} name="city"><option>Архангельск</option><option>Северодвинск</option><option>Новодвинск</option><option>Другой населённый пункт</option></select>
   </div>
+  <fieldset class="slot">
+    <legend>Когда удобно принять замерщика</legend>
+    <select class="select" name="day" data-slot-day aria-label="День замера"><option value="">Как можно скорее</option></select>
+    <div class="slot-times" role="radiogroup" aria-label="Время замера">
+      {['10:00–13:00', '13:00–16:00', '16:00–19:00', ''].map((t, i) => (
+        <label class="slot-t"><input type="radio" name="time" value={t} checked={i === 3} /><span>{t || 'Позвоните, договоримся'}</span></label>
+      ))}
+    </div>
+  </fieldset>
   <div class="field"><label for={`${idp}-msg`}>Комментарий <span class="muted">— необязательно</span></label><textarea class="textarea" id={`${idp}-msg`} name="message" rows="2" placeholder={placeholder}></textarea></div>
   <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
   <label class="check"><input type="checkbox" name="consent" value="1" required /> <span>Соглашаюсь на обработку персональных данных согласно <a href="/politika-konfidencialnosti/" target="_blank">политике конфиденциальности</a></span></label>
@@ -29,7 +38,26 @@ const { source, dark = false, button = 'Вызвать замерщика', idp 
   </div>
 </form>
 
+<script>
+  import { fillSlots } from '../lib/slots';
+  fillSlots();
+</script>
+
 <style>
+  .slot { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 8px; }
+  .slot legend { padding: 0; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+  .slot-times { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .slot-t { position: relative; cursor: pointer; }
+  .slot-t input { position: absolute; opacity: 0; inset: 0; }
+  .slot-t span { display: grid; place-items: center; min-height: 44px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper); font-size: 13px; text-align: center; line-height: 1.2; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+  .slot-t:last-child { grid-column: 1 / -1; }
+  .slot-t:hover span { border-color: var(--ink); }
+  .slot-t input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .slot-t input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .lf--dark .slot legend { color: var(--on-dark-2); }
+  .lf--dark .slot-t span { background: rgb(242 238 231 / 0.06); border-color: var(--line-dark); color: var(--on-dark); }
+  .lf--dark .slot-t input:checked + span { background: var(--on-dark); color: var(--ink); border-color: var(--on-dark); }
+  .lf--dark .slot-t:hover span { border-color: var(--on-dark); }
   .lf { display: grid; gap: 14px; position: relative; }
   .lf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 520px) { .lf-grid { grid-template-columns: 1fr; } }

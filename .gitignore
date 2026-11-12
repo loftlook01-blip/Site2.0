@@ -7,3 +7,9 @@ dist/
 .DS_Store
 public/api/config.php
 .preview/
+public/api/leads/*
+public/api/state/*
+!public/api/leads/.htaccess
+!public/api/state/.htaccess
+dist/api/leads/
+dist/api/state/

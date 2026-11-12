@@ -1,0 +1,223 @@
+---
+/**
+ * Быстрый расчёт за 4 шага: планировка → длина → фасады → столешница → ориентир цены → запись на замер.
+ * Цены — из src/data/content.ts (CALC), те же, что в конструкторе и в Telegram-боте.
+ * Итог расчёта уходит вместе с заявкой (скрытое поле extra).
+ */
+import LeadFields from './LeadFields.astro';
+import Icon from './Icon.astro';
+import { CALC } from '../data/content';
+import { SITE } from '../data/site';
+const plans: Record<string, string> = {
+  straight: '<rect x="4" y="6" width="32" height="8" rx="1"/>',
+  corner: '<path d="M4 6h32v8H12v20H4Z"/>',
+  u: '<path d="M4 6h32v28h-8V14H12v20H4Z"/>',
+  island: '<rect x="4" y="6" width="32" height="8" rx="1"/><rect x="10" y="22" width="20" height="8" rx="1"/>',
+};
+const hints: Record<string, string> = { straight: 'вдоль одной стены', corner: 'по двум стенам', u: 'по трём стенам', island: 'гарнитур и остров' };
+const presets: Record<string, number[]> = { straight: [2.4, 3, 3.6, 4.2, 5], corner: [3.6, 4.2, 5, 6, 7], u: [5, 6, 7, 8, 9], island: [5, 6, 6.5, 8, 9] };
+---
+<div class="qc" data-qc data-calc={JSON.stringify(CALC)} data-presets={JSON.stringify(presets)} data-months={SITE.promises.installmentMonths}>
+  <div class="qc-head">
+    <div class="qc-prog" aria-hidden="true"><i data-qc-bar></i></div>
+    <p class="small qc-count num" data-qc-count>Шаг 1 из 4</p>
+    <button class="link small" type="button" data-qc-back hidden>← Назад</button>
+  </div>
+
+  <div class="qc-body">
+    <section data-step="l" aria-labelledby="qc-t1">
+      <h3 class="qc-title" id="qc-t1">Какая у вас кухня?</h3>
+      <div class="qc-opts qc-opts--4">
+        {CALC.layouts.map((l) => (
+          <label class="opt opt--plan"><input type="radio" name="qc-l" value={l.id} /><span><svg viewBox="0 0 40 40" fill="currentColor" aria-hidden="true" set:html={plans[l.id]} /><b>{l.name}</b><i>{hints[l.id]}</i></span></label>
+        ))}
+      </div>
+    </section>
+
+    <section data-step="m" aria-labelledby="qc-t2" hidden>
+      <h3 class="qc-title" id="qc-t2">Какой длины гарнитур?</h3>
+      <p class="qc-sub">Сумма длин всех сторон. Не знаете точно — выберите примерно, уточним на замере.</p>
+      <p class="qc-len num"><output data-qc-len>4,2</output> м</p>
+      <input class="range" type="range" min="1.8" max="10" step="0.1" value="4.2" aria-label="Длина гарнитура в метрах" data-qc-range />
+      <div class="qc-chips" data-qc-chips></div>
+      <button class="btn btn--accent" type="button" data-qc-next>Дальше <Icon name="arrow" class="arr" /></button>
+    </section>
+
+    <section data-step="f" aria-labelledby="qc-t3" hidden>
+      <h3 class="qc-title" id="qc-t3">Из чего фасады?</h3>
+      <div class="qc-opts">
+        {CALC.facades.map((f) => (
+          <label class="opt"><input type="radio" name="qc-f" value={f.id} /><span><b>{f.name}</b><i>{f.note}</i><em class="num">от {f.price.toLocaleString('ru-RU')} ₽ / п. м</em></span></label>
+        ))}
+      </div>
+    </section>
+
+    <section data-step="t" aria-labelledby="qc-t4" hidden>
+      <h3 class="qc-title" id="qc-t4">Какая столешница?</h3>
+      <div class="qc-opts qc-opts--4">
+        {CALC.tops.map((t) => (
+          <label class="opt opt--top"><input type="radio" name="qc-t" value={t.id} /><span><u style={`background:${t.hex}`}></u><b>{t.name}</b><em class="num">от {t.price.toLocaleString('ru-RU')} ₽ / п. м</em></span></label>
+        ))}
+      </div>
+    </section>
+
+    <section data-step="r" aria-labelledby="qc-t5" hidden>
+      <div class="qc-res">
+        <div class="stack" style="gap:14px">
+          <p class="eyebrow">Ориентир стоимости</p>
+          <h3 class="qc-price num" id="qc-t5"><span data-qc-min>—</span> – <span data-qc-max>—</span> ₽</h3>
+          <p class="qc-sub">В рассрочку — от <b class="num" data-qc-month>—</b> ₽ в месяц · {SITE.promises.installmentMonths} мес. Корпус, фасады, столешница, фурнитура Hettich, доставка и монтаж, без техники.</p>
+          <ul class="qc-sum" data-qc-sum></ul>
+          <p class="small muted">Вилка ±8%. Точную цену фиксируем в договоре после бесплатного замера — дизайнер приедет с образцами и через {SITE.promises.projectDays} дня покажет кухню в 3D.</p>
+          {SITE.telegramBot && <a class="chip" style="justify-self:start" href={SITE.telegramBot} target="_blank" rel="noopener" data-goal="messenger"><Icon name="tg" /> Продолжить в Telegram</a>}
+        </div>
+        <div class="qc-form">
+          <h4 class="h-md">Запишитесь на бесплатный замер</h4>
+          <p class="small muted">Замерщик привезёт образцы фасадов и столешниц и сразу уточнит цену.</p>
+          <LeadFields source="Быстрый расчёт" idp="qc" button="Записаться на замер" />
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  import { goal } from '../lib/lead-client';
+  type Calc = typeof import('../data/content').CALC;
+
+  document.querySelectorAll<HTMLElement>('[data-qc]').forEach((root) => {
+    const C: Calc = JSON.parse(root.dataset.calc!);
+    const presets: Record<string, number[]> = JSON.parse(root.dataset.presets!);
+    const months = Number(root.dataset.months);
+    const steps = ['l', 'm', 'f', 't', 'r'];
+    const sel: { l?: string; m: number; f?: string; t?: string } = { m: 4.2 };
+    let i = 0;
+    let started = false;
+    const $ = <T extends HTMLElement>(q: string) => root.querySelector<T>(q)!;
+    const nf = new Intl.NumberFormat('ru-RU');
+    const fm = (n: number) => n.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const range = $<HTMLInputElement>('[data-qc-range]');
+
+    function go(n: number) {
+      i = Math.max(0, Math.min(steps.length - 1, n));
+      root.querySelectorAll<HTMLElement>('[data-step]').forEach((s) => (s.hidden = s.dataset.step !== steps[i]));
+      $('[data-qc-bar]').style.transform = `scaleX(${(i + (steps[i] === 'r' ? 0 : 0)) / 4})`;
+      $('[data-qc-count]').textContent = steps[i] === 'r' ? 'Готово' : `Шаг ${i + 1} из 4`;
+      $<HTMLButtonElement>('[data-qc-back]').hidden = i === 0;
+      if (steps[i] === 'r') result();
+      const top = root.getBoundingClientRect().top;
+      if (top < 0 || top > innerHeight * 0.4) root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setLayout(id: string) {
+      sel.l = id;
+      const L = C.layouts.find((x) => x.id === id)!;
+      range.min = String(L.min); range.max = String(L.max);
+      sel.m = L.def; range.value = String(L.def);
+      paintLen();
+      const chips = $('[data-qc-chips]');
+      chips.innerHTML = (presets[id] || []).map((v) => `<button type="button" class="chip" data-v="${v}">${fm(v)} м</button>`).join('');
+    }
+
+    function paintLen() {
+      if (!sel.l) return;
+      const L = C.layouts.find((x) => x.id === sel.l)!;
+      sel.m = Number(range.value);
+      $('[data-qc-len]').textContent = fm(sel.m).replace('.', ',');
+      range.style.setProperty('--fill', ((sel.m - L.min) / (L.max - L.min)) * 100 + '%');
+      root.querySelectorAll<HTMLElement>('[data-qc-chips] .chip').forEach((c) => c.classList.toggle('on', Number(c.dataset.v) === sel.m));
+    }
+
+    function result() {
+      const L = C.layouts.find((x) => x.id === sel.l)!;
+      const F = C.facades.find((x) => x.id === sel.f)!;
+      const T = C.tops.find((x) => x.id === sel.t)!;
+      const H = C.hardware[1];
+      const total = (F.price * L.k * H.k + T.price) * sel.m;
+      const r = (n: number) => Math.round(n / 1000) * 1000;
+      const min = r(total * (1 - C.spread)), max = r(total * (1 + C.spread));
+      $('[data-qc-min]').textContent = nf.format(min);
+      $('[data-qc-max]').textContent = nf.format(max);
+      $('[data-qc-month]').textContent = nf.format(Math.round(min / months / 100) * 100);
+      const rows = [['Планировка', `${L.name}, ${fm(sel.m).replace('.', ',')} м`, 0], ['Фасады', F.name, 2], ['Столешница', T.name, 3]] as const;
+      $('[data-qc-sum]').innerHTML = rows.map(([k, v, s]) => `<li><span class="muted">${k}</span><b>${v}</b><button class="link small" type="button" data-edit="${s}">изменить</button></li>`).join('');
+      const summary = `${L.name} ${fm(sel.m).replace('.', ',')} м · фасады ${F.name} · столешница ${T.name} · ${nf.format(min)}–${nf.format(max)} ₽`;
+      const extra = root.querySelector<HTMLInputElement>('[data-extra]');
+      if (extra) extra.value = summary;
+      goal('calc_result', { min, max });
+    }
+
+    root.addEventListener('change', (e) => {
+      const t = e.target as HTMLInputElement;
+      if (!started) { started = true; goal('calc'); }
+      if (t.name === 'qc-l') { setLayout(t.value); setTimeout(() => go(1), 220); }
+      else if (t.name === 'qc-f') { sel.f = t.value; setTimeout(() => go(3), 220); }
+      else if (t.name === 'qc-t') { sel.t = t.value; setTimeout(() => go(4), 220); }
+    });
+    range.addEventListener('input', paintLen);
+    root.addEventListener('click', (e) => {
+      const el = e.target as HTMLElement;
+      const chip = el.closest<HTMLElement>('[data-qc-chips] .chip');
+      if (chip) { range.value = chip.dataset.v!; paintLen(); return; }
+      if (el.closest('[data-qc-next]')) go(2);
+      if (el.closest('[data-qc-back]')) go(i - 1);
+      const ed = el.closest<HTMLElement>('[data-edit]');
+      if (ed) go(Number(ed.dataset.edit));
+    });
+  });
+</script>
+
+<style>
+  .qc { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--paper); overflow: hidden; }
+  .qc-head { display: grid; grid-template-columns: 1fr auto auto; gap: 8px 16px; align-items: center; padding: 18px clamp(18px, 3vw, 36px) 0; }
+  .qc-prog { grid-column: 1 / -1; order: 3; height: 2px; background: var(--line); margin-top: 6px; }
+  .qc-prog i { display: block; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); transition: transform 0.5s var(--ease); }
+  .qc-count { color: var(--muted); justify-self: end; grid-column: 2; }
+  .qc-head .link { grid-column: 1; grid-row: 1; justify-self: start; }
+  .qc-count { grid-row: 1; }
+  .qc-body { padding: clamp(18px, 3vw, 40px) clamp(18px, 3vw, 36px) clamp(22px, 3vw, 40px); }
+  .qc-body > section { display: grid; gap: 22px; animation: qc-in 0.5s var(--ease); }
+  .qc-body > section[hidden] { display: none; }
+  @keyframes qc-in { from { opacity: 0; transform: translateY(14px); } }
+  .qc-title { font: 500 clamp(30px, 3.6vw, 52px)/1.04 var(--serif); letter-spacing: -0.02em; }
+  .qc-sub { color: var(--ink-2); max-width: 60ch; }
+  .qc-sub b { font-weight: 500; color: var(--ink); }
+  .qc-opts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .qc-opts--4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 700px) { .qc-opts--4 { grid-template-columns: 1fr 1fr; } .qc-opts { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 420px) { .qc-opts { grid-template-columns: 1fr; } .qc-opts--4 { grid-template-columns: 1fr 1fr; } }
+  .opt { position: relative; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; inset: 0; }
+  .opt > span { display: grid; gap: 4px; height: 100%; padding: 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.2s var(--ease); }
+  .opt:hover > span { border-color: var(--ink); transform: translateY(-2px); }
+  .opt input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .opt b { font-weight: 500; font-size: 16px; line-height: 1.2; }
+  .opt i { font-style: normal; font-size: 13px; opacity: 0.62; line-height: 1.3; }
+  .opt em { font-style: normal; font-size: 13px; color: var(--accent-2); margin-top: auto; padding-top: 6px; }
+  .opt input:checked + span em { color: var(--oak); }
+  .opt--plan > span { justify-items: center; text-align: center; gap: 6px; padding-block: 22px; }
+  .opt--plan svg { width: 48px; height: 48px; opacity: 0.85; margin-bottom: 4px; }
+  .opt--top > span { grid-template-columns: 32px 1fr; column-gap: 12px; align-items: center; }
+  .opt--top u { grid-row: span 2; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 0.15); }
+  .qc-len { font: 500 clamp(54px, 8vw, 104px)/0.9 var(--serif); letter-spacing: -0.03em; }
+  .qc-len output { font: inherit; }
+  .qc-len { display: flex; align-items: baseline; gap: 12px; }
+  .qc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .qc-chips :global(.chip) { background: transparent; cursor: pointer; }
+  .qc-chips :global(.chip.on) { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  [data-qc-next] { justify-self: start; }
+  .range { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; background: transparent; --fill: 40%; }
+  .range::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(90deg, var(--ink) var(--fill), var(--line) var(--fill)); }
+  .range::-moz-range-track { height: 2px; background: linear-gradient(90deg, var(--ink) var(--fill), var(--line) var(--fill)); }
+  .range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -13px; border-radius: 50%; background: var(--accent); border: 6px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+  .range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 6px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+
+  .qc-res { display: grid; gap: clamp(24px, 4vw, 56px); }
+  @media (min-width: 960px) { .qc-res { grid-template-columns: 1fr 1fr; align-items: start; } }
+  .qc-price { font: 500 clamp(40px, 5.2vw, 76px)/1 var(--serif); letter-spacing: -0.02em; }
+  .qc-sum { display: grid; border-top: 1px solid var(--line); }
+  .qc-sum :global(li) { display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .qc-sum :global(b) { font-weight: 500; }
+  .qc-form { display: grid; gap: 12px; padding: clamp(20px, 2.6vw, 32px); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-lg); }
+</style>

@@ -34,6 +34,15 @@
         <div class="bar"><b id="prog"></b></div>
       </div>
       <div class="meta"><span>Темп <b id="mBpm">—</b></span><span>Склеек <b id="mCuts">—</b></span><span>Длина <b id="mDur">—</b></span></div>
+      <div class="segbar"><div class="segs" id="segs" aria-label="Кадры ролика по порядку"></div><button class="chip" id="shuffle" type="button">Перемешать</button></div>
+      <div class="seged" id="segEd" hidden>
+        <h2 id="segTitle"></h2>
+        <div class="segclips" id="segClips"></div>
+        <label class="l" for="segPos">Какой момент клипа показать</label>
+        <input type="range" id="segPos" min="0" max="100" step="1">
+        <div class="row"><button class="btn" id="segL" type="button">← Раньше</button><button class="btn" id="segR" type="button">Позже →</button></div>
+        <div class="row"><button class="btn" id="segReset" type="button">Сбросить</button><button class="btn hot" id="segClose" type="button">Готово</button></div>
+      </div>
       <p class="status err" id="sndWarn" hidden>Браузер не включил звук. Проверь громкость и беззвучный режим телефона, потом нажми «Смотреть» ещё раз.</p>
     </div>
 
@@ -76,9 +85,16 @@
 
       <div class="pane" id="p-music" hidden>
         <div class="fld">
-          <h2>Библиотека — свободные треки</h2>
-          <div class="cards" id="tracks"></div>
-          <p class="hint">Треки собираются прямо в приложении, авторских прав на них нет — ролик не заблокируют. В каждом есть разгон и дроп.</p>
+          <h2>Библиотека</h2>
+          <div class="chips" id="mcats"></div>
+          <div class="tlist" id="mlist"></div>
+          <p class="hint">Треки настоящих авторов под открытой лицензией: их можно ставить в рекламные ролики, если указать автора в описании. Раздел «Синтезатор» работает без интернета и подписи не требует.</p>
+        </div>
+        <div class="fld" id="creditBox" hidden>
+          <h2>Подпись об авторе — вставь в описание ролика</h2>
+          <p class="hint sel" id="creditText"></p>
+          <button class="btn" id="copyCredit" type="button">Скопировать подпись</button>
+          <p class="status" id="copyStatus"></p>
         </div>
         <div class="fld">
           <h2>Свой трек</h2>
@@ -100,10 +116,12 @@
         <div class="fld">
           <h2>Длина ролика</h2>
           <div class="chips" id="durs">
-            <button class="chip" data-v="8" type="button">8 с</button>
+            <button class="chip" data-v="10" type="button">10 с</button>
             <button class="chip" data-v="15" type="button">15 с</button>
-            <button class="chip" data-v="22" type="button">22 с</button>
+            <button class="chip" data-v="20" type="button">20 с</button>
             <button class="chip" data-v="30" type="button">30 с</button>
+            <button class="chip" data-v="45" type="button">45 с</button>
+            <button class="chip" data-v="60" type="button">60 с</button>
           </div>
         </div>
       </div>
@@ -113,11 +131,12 @@
           <p class="hint">Сценарий разом ставит ритм, переходы, цвет и текст. Дальше всё можно поправить руками.</p></div>
         <div class="fld"><h2>Ритм склеек</h2><div class="cards" id="styles"></div>
           <div class="chips" id="paces">
-            <button class="chip" data-v="slow" type="button">Реже</button>
-            <button class="chip" data-v="norm" type="button">Как в стиле</button>
-            <button class="chip" data-v="fast" type="button">Чаще</button>
+            <button class="chip" data-v="slow" type="button">Медленно</button>
+            <button class="chip" data-v="norm" type="button">Средне</button>
+            <button class="chip" data-v="fast" type="button">Энергично</button>
           </div></div>
         <div class="fld"><h2>Переходы — отметь нужные</h2><div class="chips" id="trans"></div></div>
+        <div class="fld"><h2>Эффекты поверх кадра</h2><div class="chips" id="ovfx"></div></div>
         <div class="fld">
           <label class="l" for="fxAmt">Сила эффектов: <span id="fxVal"></span></label>
           <input type="range" id="fxAmt" min="0" max="100" step="5">
@@ -191,6 +210,15 @@
             <button class="chip" data-v="720" type="button">720×1280, если тормозит</button>
           </div>
         </div>
+        <div class="fld">
+          <h2>Формат кадра</h2>
+          <div class="chips" id="fmts">
+            <button class="chip" data-v="9:16" type="button">9:16 Reels</button>
+            <button class="chip" data-v="4:5" type="button">4:5 лента</button>
+            <button class="chip" data-v="1:1" type="button">1:1 квадрат</button>
+            <button class="chip" data-v="16:9" type="button">16:9 широкий</button>
+          </div>
+        </div>
         <button class="btn hot" id="exportBtn" type="button">Собрать ролик</button>
         <p class="status" id="expStatus"></p>
         <p class="hint">Ролик записывается в реальном времени: 15 секунд ролика — 15 секунд сборки. Не сворачивай страницу и не блокируй экран, пока идёт запись.</p>
@@ -198,6 +226,7 @@
           <video id="resVideo" controls playsinline></video>
           <button class="btn hot" id="saveBtn" type="button">Сохранить видео</button>
           <p class="status" id="saveStatus"></p>
+          <p class="hint sel" id="resCredit"></p>
         </div>
       </div>
     </div>

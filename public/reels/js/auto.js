@@ -56,7 +56,7 @@ async function autoReel(){
     const pm=hint.match(/(?:от\s*)?\d[\d\s.,]*\s?(?:₽|руб\.?|р\.|тыс\.?(?:\s?руб\.?|\s?₽)?)/i);
     setText({hook:r.hook.slice(0,70),cta:String(r.cta||'').slice(0,60),lines:Array.isArray(r.lines)&&r.lines.length?r.lines.map(String).slice(0,5).join('\n'):S.lines,price:pm?pm[0].trim().slice(0,24):''});
     drawClips();ui();st.textContent=(see?'Вижу: ':'Тема: ')+String(r.product||'изделие')+'. '+String(r.seen||'')+' Ролик собран — смотри и правь на вкладках.';
-    await selectTrack(sc.track,true);
+    await selectTrack(sc.track,true,true);
   }catch(e){
     P.busy=false;const c=e&&e.code;fail(c==='not_granted'?'Ты не разрешил обращаться к Claude. Обнови страницу и разреши, либо заполни текст вручную.':c==='rate_limited'?'Слишком часто. Подожди минуту и нажми ещё раз.':c==='bad_key'?'Ключ Pollinations не подошёл. Проверь его и попробуй снова.':c==='image_rejected'||c==='images_unavailable'?'Кадры не приняли на распознавание. Напиши подсказку и нажми ещё раз.':'Не получилось распознать. Нажми ещё раз или заполни текст вручную.');
     still();

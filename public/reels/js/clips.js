@@ -18,7 +18,7 @@ function makeDemo(){
     demo.push({type:'image',img:cv,w:540,h:960,dur:0,demo:true});
   });
 }
-function makeVideo(url){const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');v.setAttribute('muted','');v.preload='auto';v.src=url;$('#vpool').appendChild(v);v.load();return v}
+function makeVideo(url){const v=document.createElement('video');v.muted=true;v.defaultMuted=true;v.playsInline=true;v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');v.setAttribute('muted','');v.preload='auto';v.src=url;v.addEventListener('seeked',()=>{if(!P.on&&!P.busy)still()});$('#vpool').appendChild(v);v.load();return v}
 function addFiles(files){
   for(const f of files){
     const url=URL.createObjectURL(f);
@@ -43,7 +43,7 @@ function drawClips(){
     const cv=document.createElement('canvas');cv.width=90;cv.height=160;const x=cv.getContext('2d');
     const src=c.type==='image'?c.img:c.els[0],sw=c.w,sh=c.h;
     if(sw&&sh){const s=Math.max(90/sw,160/sh);try{x.drawImage(src,(90-sw*s)/2,(160-sh*s)/2,sw*s,sh*s)}catch(e){}}
-    d.appendChild(cv);
+    d.appendChild(cv);c.thumb=cv;
     const n=document.createElement('span');n.className='n';n.textContent=i+1;d.appendChild(n);
     const t=document.createElement('span');t.className='d';t.textContent=c.bad?'не читается':c.type==='image'?'фото':c.dur?c.dur.toFixed(1)+' с':'…';d.appendChild(t);
     const x1=document.createElement('button');x1.className='x';x1.type='button';x1.textContent='×';x1.setAttribute('aria-label','Убрать кадр '+(i+1));

@@ -1,5 +1,5 @@
 'use strict';
-// Библиотека треков: описания (ноты) и синтезатор, который их собирает.
+// Музыка: загрузка треков из папки music/, синтезатор, список треков на экране.
 
 /* ---------- библиотека: треки собираются синтезатором ---------- */
 const CH=[[0,3,7],[-4,0,3],[3,7,10],[-2,2,5]];
@@ -81,7 +81,7 @@ async function renderTrack(d){
   }
   return o.startRendering();
 }
-// Готовые файлы лежат в папке music/. Если приложение открыто двойным кликом (file://), браузер не даёт их читать — тогда трек собирает синтезатор.
+// Готовые файлы лежат в папке music/. Если приложение открыто двойным кликом (file://), браузер не даёт их читать.
 const trackFiles=new WeakSet();
 async function trackFile(id){
   if(location.protocol==='file:')return null;
@@ -89,19 +89,38 @@ async function trackFile(id){
     const buf=await new Promise((ok,no)=>{const p=actx.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)});trackFiles.add(buf);return buf}
   catch(e){return null}
 }
-async function selectTrack(id,play){
-  const d=TRACKS[id];if(!d)return;const st=$('#audioStatus');st.className='status';st.textContent='Загружаю трек «'+d.name+'»…';
+function normalize(buf){let pk=0;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++){const v=x[i]<0?-x[i]:x[i];if(v>pk)pk=v}}
+  if(pk>0){const g=.89/pk;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++)x[i]*=g}}return buf}
+// auto=true: трек выбран не руками (запуск, сценарий) — если файла нет, молча берём синтезатор
+async function selectTrack(id,play,auto){
+  const lib=libItem(id),d=TRACKS[id];if(!lib&&!d)return;const name=lib?lib.t:d.name;
+  const st=$('#audioStatus');st.className='status';st.textContent='Загружаю трек «'+name+'»…';const my=++trackReq;
   try{
-    const my=++trackReq;let job=trackCache.get(id);
-    if(!job){job=trackFile(id).then(b=>b||renderTrack(d)).then(buf=>{let pk=0;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++){const v=x[i]<0?-x[i]:x[i];if(v>pk)pk=v}}
-      if(pk>0){const g=.89/pk;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++)x[i]*=g}}return buf});
-      trackCache.set(id,job);job.catch(()=>trackCache.delete(id))}
+    let job=trackCache.get(id);
+    if(!job){job=trackFile(id).then(b=>b||(d?renderTrack(d):Promise.reject(new Error('nofile')))).then(normalize);trackCache.set(id,job);job.catch(()=>trackCache.delete(id))}
     const buf=await job;if(my!==trackReq)return;
-    stopAll();buffer=buf;A=analyze(buf);const PP=60/d.bpm;let ph=0;
-    if(trackFiles.has(buf)){ph=A.first%PP;if(ph>PP/2)ph-=PP;if(ph<-.01||ph>.09)ph=.012;ph=Math.max(0,ph)}  // у MP3 в начале бывает пауза в десятки миллисекунд
-    A.period=PP;A.bpm=d.bpm;A.first=ph;A.intro=ph;A.drop=ph+d.intro*PP;
-    S.track=id;if(S.startMode==='manual'||S.startMode==='intro')S.startMode='pre';save();
-    st.textContent=`«${d.name}»: ${d.bpm} уд/мин, дроп на ${fmt(A.drop)}`;ui();
+    stopAll();buffer=buf;
+    if(lib){A=analyze(buf,lib.bpm);S.startMode=A.drop!=null&&A.drop<16?'pre':'intro';S.mcat=lib.cat;   // дроп далеко от начала фрагмента — стартуем с начала
+      st.textContent=`«${lib.t}» — ${lib.a}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):''}`}
+    else{A=analyze(buf);const PP=60/d.bpm;let ph=0;
+      if(trackFiles.has(buf)){ph=A.first%PP;if(ph>PP/2)ph-=PP;if(ph<-.01||ph>.09)ph=.012;ph=Math.max(0,ph)}
+      A.period=PP;A.bpm=d.bpm;A.first=ph;A.intro=ph;A.drop=ph+d.intro*PP;S.mcat='synth';
+      if(S.startMode==='manual'||S.startMode==='intro')S.startMode='pre';
+      st.textContent=`«${d.name}»: ${d.bpm} уд/мин, дроп на ${fmt(A.drop)}`}
+    S.track=id;save();ui();
     if(play)start(false);else refresh();
-  }catch(e){st.className='status err';st.textContent='Не получилось собрать трек в этом браузере. Выбери свой файл.'}
+  }catch(e){
+    if(my!==trackReq)return;
+    if(lib&&auto)return selectTrack('phonk',play);
+    st.className='status err';
+    st.textContent=!lib?'Не получилось собрать трек в этом браузере. Выбери свой файл.':location.protocol==='file:'?'Треки авторов открываются, когда приложение запущено с сайта или через файл «Запуск». Сейчас работает раздел «Синтезатор» и свой трек.':'Не получилось загрузить трек. Проверь интернет и нажми ещё раз.';
+  }
+}
+function credit(){const x=libItem(S.track);return x?`Music: "${x.t}" by ${x.a} (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License`:''}
+function drawTracks(){
+  const box=$('#mlist');box.textContent='';
+  const rows=S.mcat==='synth'?Object.keys(TRACKS).map(id=>({id,t:TRACKS[id].name,sub:TRACKS[id].mood+' · '+TRACKS[id].bpm+' уд/мин'})):LIB.filter(x=>x.cat===S.mcat).map(x=>({id:x.id,t:x.t,sub:x.a+' · '+x.bpm+' уд/мин · '+fmt(x.len)}));
+  for(const r of rows){const b=document.createElement('button');b.type='button';b.className='trk';b.dataset.v=r.id;b.setAttribute('aria-pressed',S.track===r.id);
+    const n=document.createElement('b');n.textContent=r.t;const d=document.createElement('span');d.textContent=r.sub;b.append(n,d);b.onclick=()=>selectTrack(r.id,true);box.appendChild(b)}
+  const c=credit();$('#creditBox').hidden=!c;$('#creditText').textContent=c;
 }

@@ -1,6 +1,6 @@
-// Работа без интернета: при первом открытии с сайта все файлы приложения сохраняются на устройстве.
+// Работа без интернета: при первом открытии с сайта файлы приложения сохраняются на устройстве.
 // После любых правок в коде поменяй номер версии — иначе телефон будет показывать старую копию.
-const VERSION='iskra-v4';
+const VERSION='iskra-v6';
 const FILES=[
  "css/app.css",
  "fonts/caveat-cyrillic-700-normal.woff2",
@@ -44,12 +44,38 @@ const FILES=[
  "js/tracks.js",
  "js/ui.js",
  "manifest.webmanifest",
+ "music/basic-implosion.mp3",
+ "music/brain-dance.mp3",
+ "music/chill-wave.mp3",
  "music/chill.mp3",
  "music/cinema.mp3",
+ "music/disco-medusae.mp3",
  "music/dnb.mp3",
+ "music/electro-cabello.mp3",
+ "music/ethernight-club.mp3",
+ "music/exit-the-premises.mp3",
+ "music/funkorama.mp3",
+ "music/galactic-rap.mp3",
  "music/house.mp3",
+ "music/kick-shock.mp3",
+ "music/latin-industries.mp3",
+ "music/loopster.mp3",
+ "music/metalmania.mp3",
+ "music/mighty-like-us.mp3",
+ "music/movement-proposition.mp3",
+ "music/neon-laser-horizon.mp3",
  "music/phonk.mp3",
- "music/trap.mp3"
+ "music/protofunk.mp3",
+ "music/pump.mp3",
+ "music/raving-energy.mp3",
+ "music/realizer.mp3",
+ "music/rhinoceros.mp3",
+ "music/rocket-power.mp3",
+ "music/too-cool.mp3",
+ "music/trap.mp3",
+ "music/voxel-revolution.mp3",
+ "music/werq.mp3",
+ "music/who-likes-to-party.mp3"
 ];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(['./',...FILES])).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

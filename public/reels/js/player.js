@@ -15,6 +15,7 @@ async function start(record){
   for(const c of clips)if(c.els)for(const v of c.els){try{v.pause()}catch(e){}}
   const s0=T.segs[0],s1=T.segs[1];
   if(s0.el)await seekTo(s0.el,s0.src,true);if(s1&&s1.el&&s1.el!==s0.el)await seekTo(s1.el,s1.src,true);
+  drawWave();
   P.silent=actx.state!=='running';$('#sndWarn').hidden=!P.silent||!buffer;
   const when=actx.currentTime+.15;
   if(buffer&&!P.silent){
@@ -39,7 +40,7 @@ function loop(){
   if(t>=T.dur){finish();return}
   const tt=Math.max(0,t),i=segAt(tt);
   if(t>=0&&i!==P.cur){
-    const prev=P.cur>=0?T.segs[P.cur]:null,seg=T.segs[i],nx=T.segs[i+1];P.cur=i;
+    const prev=P.cur>=0?T.segs[P.cur]:null,seg=T.segs[i],nx=T.segs[i+1];if(segBtns[P.cur])segBtns[P.cur].classList.remove('now');if(segBtns[i])segBtns[i].classList.add('now');P.cur=i;
     if(seg.el){seg.el.playbackRate=seg.rate;const p=seg.el.play();if(p&&p.catch)p.catch(()=>{})}
     if(prev&&prev.el&&prev.el!==seg.el)prev.el.pause();
     if(nx&&nx.el&&nx.el!==seg.el)seekTo(nx.el,nx.src,false);
@@ -51,7 +52,7 @@ function halt(){
   P.on=false;cancelAnimationFrame(P.raf);
   if(srcNode){try{srcNode.stop()}catch(e){}srcNode=null}
   for(const c of clips)if(c.els)for(const v of c.els){try{v.pause();v.playbackRate=1}catch(e){}}
-  $('#frame').classList.remove('playing');$('#badge').hidden=true;$('#prog').style.width='0';
+  segBtns.forEach(b=>b.classList.remove('now'));$('#frame').classList.remove('playing');$('#badge').hidden=true;$('#prog').style.width='0';
 }
 function finish(){
   const rec=P.rec;halt();
@@ -65,10 +66,11 @@ function stopAll(){
 let stillT=0;
 function still(){
   if(P.on||P.busy)return;clearTimeout(stillT);
-  stillT=setTimeout(()=>{if(P.on||P.busy)return;build();const T=TL,s0=T.segs[0];
-    const tx=T.hook?Math.max(0,T.hookEnd-.4):T.lines[0]?T.lines[0].a+.4:T.P;
+  stillT=setTimeout(()=>{if(P.on||P.busy)return;build();const T=TL;let s0=T.segs[0],tf=Math.min(.3,s0.len*.5);
+    let tx=T.hook?Math.max(0,T.hookEnd-.4):T.lines[0]?T.lines[0].a+.4:T.P;
+    if(selSeg>=0&&T.segs[selSeg]){s0=T.segs[selSeg];tf=s0.t0+Math.min(.25,s0.len*.5);tx=tf}
     if(s0.el&&Math.abs(s0.el.currentTime-s0.src)>.05&&s0.el.readyState>=1){try{s0.el.currentTime=s0.src}catch(e){}}
-    frame(Math.min(.3,s0.len*.5),tx);drawWave();
+    frame(tf,tx);drawWave();
   },40);
 }
 const refresh=()=>{if(P.on&&!P.rec)stopAll();if(!P.on)still()};

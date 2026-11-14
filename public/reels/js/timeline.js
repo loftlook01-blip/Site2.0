@@ -1,12 +1,32 @@
 'use strict';
-// Таймлайн: раскладка склеек по битам, текст на экране, отрисовка кадра.
+// Таймлайн: раскладка склеек по битам, правка кадров, текст на экране, отрисовка кадра.
 
 /* ---------- таймлайн ---------- */
-let TL=null;
+let TL=null,OV={},OVsig='',selSeg=-1,segBtns=[];
+function drawSegs(){
+  const box=$('#segs');box.textContent='';segBtns=[];
+  TL.segs.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='seg'+(OV[i]?' ed':'');b.style.flexGrow=s.beats;b.textContent=TL.pool.indexOf(s.clip)+1;
+    b.setAttribute('aria-pressed',i===selSeg);b.setAttribute('aria-label','Кадр '+(i+1)+', клип '+(TL.pool.indexOf(s.clip)+1));b.onclick=()=>openSeg(i);box.appendChild(b);segBtns.push(b)});
+  $('#segEd').hidden=selSeg<0;
+}
+function fillSegEd(){
+  if(selSeg<0||!TL.segs[selSeg]){selSeg=-1;$('#segEd').hidden=true;return}
+  const i=selSeg,s=TL.segs[i];$('#segTitle').textContent=`Кадр ${i+1} из ${TL.segs.length} · ${s.len.toFixed(1)} с`;
+  const box=$('#segClips');box.textContent='';
+  TL.pool.forEach((c,j)=>{const b=document.createElement('button');b.type='button';b.className='segclip';b.setAttribute('aria-pressed',c===s.clip);b.setAttribute('aria-label','Поставить клип '+(j+1));
+    const cv=document.createElement('canvas');cv.width=46;cv.height=80;const src=c.thumb||c.img;try{const sw=src.width||src.naturalWidth,sh=src.height||src.naturalHeight,k=Math.max(46/sw,80/sh);cv.getContext('2d').drawImage(src,(46-sw*k)/2,(80-sh*k)/2,sw*k,sh*k)}catch(e){}
+    b.appendChild(cv);b.onclick=()=>{OV[i]={clip:c,pos:null};segApply()};box.appendChild(b)});
+  const r=$('#segPos'),can=s.clip.type==='video'&&s.avail>0.05;r.disabled=!can;r.value=can?Math.round(s.src/s.avail*100):0;
+  $('#segL').disabled=i===0;$('#segR').disabled=i===TL.segs.length-1;
+}
+function segApply(){build();fillSegEd();still()}
+function openSeg(i){if(P.rec)return;if(P.on)stopAll();selSeg=i;segApply()}
+function segSwap(j){const i=selSeg;if(i<0||j<0||j>=TL.segs.length)return;const a=TL.segs[i].clip,b=TL.segs[j].clip,pa=OV[i]?OV[i].pos:null,pb=OV[j]?OV[j].pos:null;
+  OV[i]={clip:b,pos:pb};OV[j]={clip:a,pos:pa};selSeg=j;segApply()}
 function parseWords(s){const up=!FONTS[S.font].low;return s.trim().split(/\s+/).filter(Boolean).map(w=>{const acc=/^\*.*\*[.,!?…]*$/.test(w);w=w.replace(/\*/g,'');return {t:up?w.toUpperCase():w.charAt(0)+w.slice(1).toLowerCase(),acc}})}
 function font(size){const f=FONTS[S.font];return `${f.w} ${size*(f.k||1)}px "${f.f}","Arial Black",sans-serif`}
 function layout(words,size0,minSize,maxRows){
-  const u=W/1080,maxW=W*.84;let size=size0*u*S.tsize,rows;
+  const u=Math.min(W,H)/1080,maxW=W*.84;let size=size0*u*S.tsize,rows;
   for(;;){
     ctx.font=font(size);const gap=size*(S.tstyle==='plashka'?.5:.28);rows=[];let row={words:[],w:0};
     for(const wd of words){const w=ctx.measureText(wd.t).width;
@@ -32,7 +52,8 @@ function build(){
   const P=period;dur=N*P;
   const st=STYLES[S.style],pm=S.pace==='slow'?2:S.pace==='fast'?.5:1;const dropBeat=drop!=null?Math.round((drop-start)/P):-1;
   const tr=S.trans.filter(k=>TRANS[k]);if(!tr.length)tr.push('cut');
-  const src=clips.filter(c=>!c.bad&&(c.type==='image'?c.w:true));const pool=src.length?src:demo;
+  const src=clips.filter(c=>!c.bad&&(c.type==='image'?c.w:true));let pool=src.length?src:demo;
+  if(S.seed){let z=S.seed>>>0;const r=()=>{z=(z*1664525+1013904223)>>>0;return z/4294967296};pool=pool.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}}
   const segs=[];let pos=0,pi=0,k=0;
   while(pos<N-.01){
     let len=(dropBeat>0&&pos<dropBeat)?st.pre*Math.max(1,pm):Math.max(.5,st.pat[pi++%st.pat.length]*pm);
@@ -42,13 +63,17 @@ function build(){
     segs.push({t0:pos*P,len:len*P,beats:len,clip,fx:pos===0?'cut':(dropBeat>0&&Math.abs(pos-dropBeat)<.01)?'drop':tr[(k-1)%tr.length],dir:k%2?1:-1,k});
     pos+=len;k++;
   }
+  // ручные правки кадров живут, пока не изменилась сама раскладка
+  const sig=[S.style,S.pace,N,segs.length,S.track,pool.length,S.seed].join('|');if(sig!==OVsig){OVsig=sig;OV={};selSeg=-1}
+  segs.forEach((s,i)=>{const o=OV[i];if(o&&o.clip&&pool.includes(o.clip))s.clip=o.clip});
   const uses=new Map();segs.forEach(s=>{const a=uses.get(s.clip)||[];a.push(s);uses.set(s.clip,a)});
   uses.forEach((arr,clip)=>{arr.forEach((s,j)=>{
     s.rate=1;
     if(clip.type==='video'){
       if(S.ramp)s.rate=s.beats<=1?1.35:s.beats>=4?.8:1;
       const need=s.len*s.rate,avail=Math.max(0,(clip.dur||0)-need-.08);
-      s.src=arr.length>1?avail*j/(arr.length-1):avail*.25;
+      s.src=arr.length>1?avail*j/(arr.length-1):avail*.25;s.avail=avail;
+      const o=OV[s.k];if(o&&o.pos!=null)s.src=avail*o.pos;
       s.el=clip.els[0];
     }
   })});
@@ -60,7 +85,7 @@ function build(){
   const step=S.anim==='whole'?0:hw.length<=4?P:P/2;
   const caps=S.capMode==='clip'&&pool.some(c=>c.cap&&c.cap.trim());
   let hookEndB=hw.length?Math.min(N-ctaB,Math.max(lines.length||caps?6:8,Math.ceil(hw.length*step/P)+3)):0;
-  const T={P,N,dur,start,drop,dropBeat,segs,step,hookEnd:hookEndB*P,ctaT:ctaB?(N-ctaB)*P:Infinity,
+  const T={P,N,dur,start,drop,dropBeat,segs,pool,step,hookEnd:hookEndB*P,ctaT:ctaB?(N-ctaB)*P:Infinity,
     hook:hw.length?layout(hw,128,60,4):null,cta:ctaB&&S.cta.trim()?layout(parseWords(S.cta),92,48,3):null,
     price:ctaB&&S.price.trim()?layout([{t:S.price.trim(),acc:true}],84,44,1):null,lines:[]};
   const span=N-ctaB-hookEndB;
@@ -73,7 +98,7 @@ function build(){
     ev.forEach((e,i)=>T.lines.push({a:e.a,b:Math.min(ev[i+1]?ev[i+1].a:Infinity,e.a+Math.max(e.len,2*P),T.ctaT),lay:layout(parseWords(e.tx),66,40,3)}));
   }else if(lines.length&&span>=1){const per=Math.max(1,Math.floor(span/lines.length));
     lines.slice(0,Math.floor(span/per)).forEach((s,i)=>T.lines.push({a:(hookEndB+i*per)*P,b:(hookEndB+(i+1)*per)*P,lay:layout(parseWords(s),66,40,3)}))}
-  TL=T;
+  TL=T;drawSegs();
   $('#mBpm').textContent=A?Math.round(A.bpm)+' уд/мин':'—';$('#mCuts').textContent=segs.length;$('#mDur').textContent=dur.toFixed(1)+' с';
 }
 
@@ -100,7 +125,7 @@ function drawBlock(lay,cy,fn,forcePl){
   lay.rows.forEach((row,r)=>{const y=cy-h/2+lay.lh*(r+.5),x0=(W-row.w)/2;row.words.forEach(wd=>{const a=fn(i++);if(a)drawWord(wd,x0+wd.x+wd.w/2,y+(a.dy||0),lay.size,a.sc,a.al,forcePl)})});
 }
 function drawText(t){
-  const T=TL,u=W/1080,bp=((t%T.P)+T.P)%T.P,pulse=S.pulse?Math.exp(-bp*9):0;
+  const T=TL,u=Math.min(W,H)/1080,bp=((t%T.P)+T.P)%T.P,pulse=S.pulse?Math.exp(-bp*9):0;
   if(S.handle.trim()){ctx.save();ctx.font=`800 ${34*u}px Montserrat,"Arial Black",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,255,255,.82)';ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=10*u;ctx.fillText(S.handle.trim(),W/2,H*.115);ctx.restore()}
   if(T.hook&&t<T.hookEnd){const o=clamp((T.hookEnd-t)/.16);
     drawBlock(T.hook,H*.4,i=>{const k=clamp((t-i*T.step)/.13);if(k<=0)return null;return {sc:1+.5*Math.pow(1-k,3),al:k*o}})}
@@ -132,7 +157,8 @@ function frame(t,textT){
     const src=isImg?seg.clip.img:seg.el,ok=isImg?true:(src&&src.readyState>=2);
     const sw=isImg?seg.clip.w:(src&&src.videoWidth)||seg.clip.w,sh=isImg?seg.clip.h:(src&&src.videoHeight)||seg.clip.h;
     if(ok&&sw&&sh){try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);frame.sw=sw;frame.sh=sh}catch(err){}}
-    const va=(frame.sw||9)/(frame.sh||16),ca=9/16;
+    const va=(frame.sw||9)/(frame.sh||16),ca=W/H,fxs=S.fx,bz=Math.exp(-bp*6);
+    gl.uniform1f(U.uAsp,ca);gl.uniform1f(U.uPr,fxs.includes('prism')?.5+.5*bz:0);gl.uniform1f(U.uMir,fxs.includes('mirror')?1:0);gl.uniform1f(U.uVhs,fxs.includes('vhs')?1:0);gl.uniform1f(U.uLeak,fxs.includes('leak')?.6+.4*bz:0);gl.uniform1f(U.uT,t);
     gl.uniform2f(U.uS,va>ca?ca/va:1,va>ca?1:va/ca);gl.uniform2f(U.uSh,sx,sy);gl.uniform2f(U.uBd,bx,by);gl.uniform1f(U.uZ,z);gl.uniform1f(U.uR,rot);
     gl.uniform1f(U.uFl,fl);gl.uniform1f(U.uDim,dim);gl.uniform1f(U.uRgb,rgb);gl.uniform1f(U.uBl,bl);gl.uniform1f(U.uCon,L.con);gl.uniform1f(U.uSat,L.sat);gl.uniform1f(U.uTemp,L.temp);
     gl.uniform1f(U.uBri,L.bri);gl.uniform1f(U.uFade,L.fade);gl.uniform1f(U.uVig,L.vig);gl.uniform1f(U.uGr,L.grain);gl.uniform1f(U.uTime,t%10);gl.uniform1f(U.uTeal,L.teal);

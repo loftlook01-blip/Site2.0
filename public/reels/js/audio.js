@@ -17,7 +17,7 @@ function unlock(){
 }
 ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlock,true));
 
-function analyze(buf){
+function analyze(buf,hint){
   const sr=buf.sampleRate,n=buf.length,c0=buf.getChannelData(0),c1=buf.numberOfChannels>1?buf.getChannelData(1):null;
   const hop=Math.round(sr/100),F=Math.floor(n/hop),fps=sr/hop;
   const eL=new Float32Array(F),eA=new Float32Array(F);
@@ -32,8 +32,9 @@ function analyze(buf){
     const bpm=60*fps/lag,w=Math.exp(-.5*Math.pow(Math.log2(bpm/122)/.55,2));if(s*w>bs){bs=s*w;bl=lag}
   }
   const at=x=>{const i=Math.floor(x),fr=x-i;return i+1<F&&i>=0?o[i]*(1-fr)+o[i+1]*fr:0};
-  let bp=bl,bph=0,bsc=-1;
-  for(let per=bl-1;per<=bl+1;per+=.02)for(let ph=0;ph<per;ph+=1){let s=0;for(let x=off+ph;x<off+M;x+=per)s+=at(x);s/=(M/per);if(s>bsc){bsc=s;bp=per;bph=ph}}
+  if(hint)bl=fps*60/hint;   // темп известен заранее — ищем только, где стоят удары
+  let bp=bl,bph=0,bsc=-1;const lo=hint?bl*.996:bl-1,hi=hint?bl*1.004:bl+1,stp=hint?bl*.0005:.02;
+  for(let per=lo;per<=hi;per+=stp)for(let ph=0;ph<per;ph+=1){let s=0;for(let x=off+ph;x<off+M;x+=per)s+=at(x);s/=(M/per);if(s>bsc){bsc=s;bp=per;bph=ph}}
   let fph=bph;bsc=-1;
   for(let ph=bph-1;ph<=bph+1;ph+=.2){let s=0;for(let x=off+ph;x<off+M;x+=bp)s+=at(x);if(s>bsc){bsc=s;fph=ph}}
   const period=bp/fps;let first=((off+fph)/fps)%period;if(first<0)first+=period;
@@ -56,7 +57,7 @@ async function loadAudio(ab,name){
     audio();
     const buf=await new Promise((ok,no)=>{const p=actx.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)});
     await sleep(30);
-    stopAll();buffer=buf;A=analyze(buf);S.track='own';
+    ++trackReq;stopAll();buffer=buf;A=analyze(buf);S.track='own';
     if(S.startMode==='manual'||(S.startMode!=='intro'&&A.drop==null)||(S.startMode==='intro'&&A.drop!=null))S.startMode=A.drop!=null?'pre':'intro';
     st.textContent=`${name}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):', яркого дропа нет — начинаю с начала'}`;
     ui();refresh();

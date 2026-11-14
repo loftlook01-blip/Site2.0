@@ -21,6 +21,7 @@ async function doExport(){
   const v=$('#resVideo');if(v.src)URL.revokeObjectURL(v.src);v.src=URL.createObjectURL(blob);$('#result').hidden=false;$('#saveStatus').textContent='';
   if(res.silent&&buffer){st.className='status err';st.textContent='Ролик записан без звука: браузер не дал включить аудио. Нажми «Собрать ролик» ещё раз.'}
   else st.textContent=`Готово: ${(blob.size/1048576).toFixed(1)} МБ, ${resultExt.toUpperCase()}`+(resultExt==='webm'?'. Этот браузер пишет WebM — для Instagram собери ролик в Safari на iPhone или в свежем Chrome.':'');
+  $('#resCredit').textContent=credit()?'Подпись об авторе музыки для описания ролика: '+credit():'';
   $('#result').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function saveFile(){

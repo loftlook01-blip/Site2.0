@@ -1,0 +1,59 @@
+// Работа без интернета: при первом открытии с сайта все файлы приложения сохраняются на устройстве.
+// После любых правок в коде поменяй номер версии — иначе телефон будет показывать старую копию.
+const VERSION='iskra-v4';
+const FILES=[
+ "css/app.css",
+ "fonts/caveat-cyrillic-700-normal.woff2",
+ "fonts/caveat-latin-700-normal.woff2",
+ "fonts/dela-gothic-one-cyrillic-400-normal.woff2",
+ "fonts/dela-gothic-one-latin-400-normal.woff2",
+ "fonts/fonts.css",
+ "fonts/manrope-cyrillic-400-normal.woff2",
+ "fonts/manrope-cyrillic-600-normal.woff2",
+ "fonts/manrope-cyrillic-800-normal.woff2",
+ "fonts/manrope-latin-400-normal.woff2",
+ "fonts/manrope-latin-600-normal.woff2",
+ "fonts/manrope-latin-800-normal.woff2",
+ "fonts/montserrat-cyrillic-800-normal.woff2",
+ "fonts/montserrat-cyrillic-900-normal.woff2",
+ "fonts/montserrat-latin-800-normal.woff2",
+ "fonts/montserrat-latin-900-normal.woff2",
+ "fonts/oswald-cyrillic-700-normal.woff2",
+ "fonts/oswald-latin-700-normal.woff2",
+ "fonts/pacifico-cyrillic-400-normal.woff2",
+ "fonts/pacifico-latin-400-normal.woff2",
+ "fonts/rubik-mono-one-cyrillic-400-normal.woff2",
+ "fonts/rubik-mono-one-latin-400-normal.woff2",
+ "fonts/russo-one-cyrillic-400-normal.woff2",
+ "fonts/russo-one-latin-400-normal.woff2",
+ "fonts/tektur-cyrillic-800-normal.woff2",
+ "fonts/tektur-latin-800-normal.woff2",
+ "fonts/unbounded-cyrillic-900-normal.woff2",
+ "fonts/unbounded-latin-900-normal.woff2",
+ "icons/icon-192.png",
+ "icons/icon-512.png",
+ "index.html",
+ "js/audio.js",
+ "js/auto.js",
+ "js/clips.js",
+ "js/config.js",
+ "js/export.js",
+ "js/gl.js",
+ "js/player.js",
+ "js/timeline.js",
+ "js/tracks.js",
+ "js/ui.js",
+ "manifest.webmanifest",
+ "music/chill.mp3",
+ "music/cinema.mp3",
+ "music/dnb.mp3",
+ "music/house.mp3",
+ "music/phonk.mp3",
+ "music/trap.mp3"
+];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(['./',...FILES])).then(()=>self.skipWaiting()))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{
+  const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin)return;
+  e.respondWith(caches.match(e.request,{ignoreSearch:true}).then(r=>r||fetch(e.request)));
+});

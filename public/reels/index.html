@@ -16,221 +16,111 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+<div id="app">
+  <section class="scr gut" id="s-home">
     <div>
-      <div class="brand">Искра<i>.</i>монтаж</div>
-      <div class="sub">Reels в бит для мебели и металла</div>
+      <div class="brand logo">Искра<i>.</i><br>монтаж</div>
+      <p class="tag">Reels в бит для мебели и металла</p>
     </div>
-    <button class="btn hot" id="exportTop" type="button">Собрать ролик</button>
-  </header>
+    <div class="steps"><span><b>1</b> Нарезки</span><span><b>2</b> Трек</span><span><b>3</b> Готовый ролик</span></div>
+    <div class="homebtns">
+      <button class="btn hot" id="hNew" type="button">Новый ролик</button>
+      <button class="btn" id="hCont" type="button" hidden>Продолжить ролик</button>
+    </div>
+  </section>
 
-  <div class="grid">
-    <div class="stage">
+  <section class="scr" id="s-pick" hidden>
+    <div class="bar gut"><button class="ib" id="pkBack" type="button" aria-label="Назад"></button><h1 class="ttl">Медиафайлы</h1><button class="next" id="pkNext" type="button">Далее</button></div>
+    <div class="scroll gut">
+      <div class="pgrid" id="pgrid"></div>
+      <div class="aibox" id="aiBox">
+        <h2>Авто-ролик</h2>
+        <p class="hint">Приложение посмотрит кадры, поймёт изделие, расставит нарезки по смыслу и напишет текст. Кадры уходят на распознавание.</p>
+        <input type="text" id="brief" maxlength="140" placeholder="Подсказка: журнальный стол, дуб и металл, от 18 000 ₽" aria-label="Подсказка для авто-ролика">
+        <div class="fld" id="keyBox" hidden>
+          <label class="l" for="pkey">Ключ Pollinations — в скачанной папке распознавание идёт через этот сервис</label>
+          <input type="text" id="pkey" maxlength="120" placeholder="pk_…" autocomplete="off">
+        </div>
+        <button class="btn hot" id="autoBtn" type="button">Понять кадры и собрать ролик</button>
+        <p class="status" id="autoStatus"></p>
+      </div>
+      <ol class="how">
+        <li>Снимай вертикально, по 3–6 секунд на кадр.</li>
+        <li>Первым ставь самый сильный кадр: искры, готовый стол, «до/после».</li>
+        <li>Номер на кадре — порядок в ролике. Стрелка двигает кадр вперёд.</li>
+      </ol>
+    </div>
+    <div class="pfoot gut"><span>Порядок кадров</span><div class="chips" id="ordChips">
+      <button class="chip" data-v="own" type="button">Свой порядок</button><button class="chip" data-v="mix" type="button">Перемешать</button></div></div>
+  </section>
+
+  <section class="scr" id="s-music" hidden>
+    <div class="bar gut"><button class="ib" id="muBack" type="button" aria-label="Назад"></button><h1 class="ttl">Выберите музыку</h1><button class="next" id="muNext" type="button">Далее</button></div>
+    <div class="cats gut" id="mcats"></div>
+    <div class="scroll gut">
+      <div id="mlist"></div>
+      <div class="own" id="ownBox" hidden>
+        <p class="hint">Любой трек с телефона или компьютера: MP3, M4A, WAV или видео со звуком. Приложение само найдёт темп и дроп.</p>
+        <label class="btn hot">Выбрать файл<input id="fAudio" type="file" accept="audio/*,video/*" hidden></label>
+      </div>
+      <p class="status" id="mStatus"></p>
+      <p class="credit sel" id="mCredit"></p>
+    </div>
+    <div class="btabs gut" id="mtabs"><button data-v="lib" type="button">Библиотека</button><button data-v="own" type="button">Свой файл</button></div>
+  </section>
+
+  <section class="scr" id="s-edit" hidden>
+    <div class="bar gut"><button class="ib" id="edHome" type="button" aria-label="На главный экран"></button><div class="brand sm">Искра<i>.</i>монтаж</div><button class="save" id="edSave" type="button"></button></div>
+    <div class="stage gut" id="stage">
       <div class="frame" id="frame">
         <canvas id="out" width="1080" height="1920" aria-label="Предпросмотр ролика"></canvas>
         <span class="badge" id="badge" hidden></span>
-        <button class="playbtn" id="play" type="button" aria-label="Смотреть"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></button>
-        <div class="bar"><b id="prog"></b></div>
+        <button class="mbtn" id="edMusic" type="button" aria-label="Сменить трек"></button>
       </div>
-      <div class="meta"><span>Темп <b id="mBpm">—</b></span><span>Склеек <b id="mCuts">—</b></span><span>Длина <b id="mDur">—</b></span></div>
-      <div class="segbar"><div class="segs" id="segs" aria-label="Кадры ролика по порядку"></div><button class="chip" id="shuffle" type="button">Перемешать</button></div>
-      <div class="seged" id="segEd" hidden>
-        <h2 id="segTitle"></h2>
-        <div class="segclips" id="segClips"></div>
-        <label class="l" for="segPos">Какой момент клипа показать</label>
-        <input type="range" id="segPos" min="0" max="100" step="1">
-        <div class="row"><button class="btn" id="segL" type="button">← Раньше</button><button class="btn" id="segR" type="button">Позже →</button></div>
-        <div class="row"><button class="btn" id="segReset" type="button">Сбросить</button><button class="btn hot" id="segClose" type="button">Готово</button></div>
-      </div>
-      <p class="status err" id="sndWarn" hidden>Браузер не включил звук. Проверь громкость и беззвучный режим телефона, потом нажми «Смотреть» ещё раз.</p>
     </div>
-
-    <div class="deck">
-      <div class="tabs" role="tablist">
-        <button role="tab" data-tab="clips" aria-selected="true" type="button">Клипы</button>
-        <button role="tab" data-tab="music" aria-selected="false" type="button">Музыка</button>
-        <button role="tab" data-tab="style" aria-selected="false" type="button">Монтаж</button>
-        <button role="tab" data-tab="text" aria-selected="false" type="button">Текст</button>
-        <button role="tab" data-tab="export" aria-selected="false" type="button">Экспорт</button>
+    <div class="ctl1 gut"><button class="ib" id="undo" type="button" aria-label="Отменить"></button><button class="ib" id="redo" type="button" aria-label="Повторить"></button><span class="time" id="time">0:00 / 0:00</span><span class="tname" id="tname"></span></div>
+    <div class="ctl2 gut"><button class="ib" id="play" type="button" aria-label="Смотреть"></button><canvas class="prog" id="prog" aria-label="Шкала ролика: склейки и эффекты"></canvas><button class="ib" id="shuffle" type="button" aria-label="Перемешать кадры"></button></div>
+    <p class="status err gut" id="sndWarn" hidden>Браузер не включил звук. Проверь громкость и беззвучный режим, потом нажми ▶ ещё раз.</p>
+    <div class="dock">
+      <div class="panel gut" id="pn-tools"><div class="tools" id="tools"></div></div>
+      <div class="panel gut" id="pn-fx" hidden>
+        <div class="fxrow" id="fxrow"></div>
+        <div class="fxbar"><span class="hint" id="fxHint">Удерживай кружок, пока идёт ролик, — эффект ляжет на это место. Короткое нажатие — на один удар.</span><button class="mini" id="fxAll" type="button">На весь ролик</button><button class="mini" id="fxClear" type="button">Очистить</button></div>
       </div>
-
-      <div class="pane" id="p-clips">
-        <div class="fld">
-          <h2>Твои кадры</h2>
-          <label class="btn hot">Добавить видео и фото
-            <input id="fClips" type="file" accept="video/*,image/*" multiple hidden>
-          </label>
-          <p class="hint" id="clipsHint"></p>
-        </div>
-        <div class="clips" id="clipList"></div>
-        <div class="fld" id="autoBox">
-          <h2>Авто-ролик</h2>
-          <label class="l" for="brief">Подсказка, если хочешь: что за изделие, материал, цена</label>
-          <input type="text" id="brief" maxlength="140" placeholder="Журнальный стол, дуб и металл, от 18 000 ₽">
-          <button class="btn hot" id="autoBtn" type="button">Понять кадры и собрать ролик</button>
-          <p class="status" id="autoStatus"></p>
-          <div class="fld" id="keyBox" hidden>
-            <label class="l" for="pkey">Ключ Pollinations — в скачанном файле распознавание идёт через этот сервис</label>
-            <input type="text" id="pkey" maxlength="120" placeholder="pk_…" autocomplete="off">
-          </div>
-          <p class="hint">Приложение берёт кадры из каждой нарезки, определяет изделие, расставляет нарезки по смыслу и пишет хук, подпись к каждому кадру и призыв. Кадры при этом отправляются на распознавание.</p>
-        </div>
-        <ol class="how">
-          <li>Снимай вертикально, по 3–6 секунд на кадр.</li>
-          <li>Первым ставь самый сильный кадр: искры, готовый стол, «до/после».</li>
-          <li>Порядок клипов — порядок в ролике. Стрелка двигает клип вперёд.</li>
-        </ol>
+      <div class="panel gut" id="pn-flt" hidden>
+        <div class="fltrow" id="fltrow"></div>
+        <input type="range" id="lookAmt" min="0" max="100" step="5" aria-label="Сила фильтра">
       </div>
-
-      <div class="pane" id="p-music" hidden>
-        <div class="fld">
-          <h2>Библиотека</h2>
-          <div class="chips" id="mcats"></div>
-          <div class="tlist" id="mlist"></div>
-          <p class="hint">Треки настоящих авторов под открытой лицензией: их можно ставить в рекламные ролики, если указать автора в описании. Раздел «Синтезатор» работает без интернета и подписи не требует.</p>
-        </div>
-        <div class="fld" id="creditBox" hidden>
-          <h2>Подпись об авторе — вставь в описание ролика</h2>
-          <p class="hint sel" id="creditText"></p>
-          <button class="btn" id="copyCredit" type="button">Скопировать подпись</button>
-          <p class="status" id="copyStatus"></p>
-        </div>
-        <div class="fld">
-          <h2>Свой трек</h2>
-          <label class="btn">Выбрать файл с телефона
-            <input id="fAudio" type="file" accept="audio/*,video/*" hidden>
-          </label>
-          <p class="status" id="audioStatus"></p>
-        </div>
-        <div class="fld">
-          <h2>С какого места</h2>
-          <canvas class="wave" id="wave" width="900" height="152"></canvas>
-          <div class="chips" id="startModes">
-            <button class="chip" data-v="pre" type="button">Разгон + дроп</button>
-            <button class="chip" data-v="drop" type="button">Сразу с дропа</button>
-            <button class="chip" data-v="intro" type="button">С начала</button>
-          </div>
-          <p class="hint">Нажми на волну, чтобы поставить старт вручную. Оранжевая зона — кусок трека в ролике, голубая черта — дроп.</p>
-        </div>
-        <div class="fld">
-          <h2>Длина ролика</h2>
-          <div class="chips" id="durs">
-            <button class="chip" data-v="10" type="button">10 с</button>
-            <button class="chip" data-v="15" type="button">15 с</button>
-            <button class="chip" data-v="20" type="button">20 с</button>
-            <button class="chip" data-v="30" type="button">30 с</button>
-            <button class="chip" data-v="45" type="button">45 с</button>
-            <button class="chip" data-v="60" type="button">60 с</button>
-          </div>
-        </div>
+      <div class="sheet" id="sheet" hidden>
+        <div class="sbody gut" id="sbody"></div>
+        <div class="sfoot gut"><button class="ib" id="sX" type="button" aria-label="Отменить изменения"></button><span id="sTitle"></span><button class="ib" id="sOk" type="button" aria-label="Применить"></button></div>
       </div>
+      <div class="tabs gut" id="tabs"><button data-v="tools" type="button">Инструм.</button><button data-v="fx" type="button">Правка</button><button data-v="flt" type="button">Фильтры</button></div>
+    </div>
+  </section>
 
-      <div class="pane" id="p-style" hidden>
-        <div class="fld"><h2>Готовый сценарий</h2><div class="cards" id="scens"></div>
-          <p class="hint">Сценарий разом ставит ритм, переходы, цвет и текст. Дальше всё можно поправить руками.</p></div>
-        <div class="fld"><h2>Ритм склеек</h2><div class="cards" id="styles"></div>
-          <div class="chips" id="paces">
-            <button class="chip" data-v="slow" type="button">Медленно</button>
-            <button class="chip" data-v="norm" type="button">Средне</button>
-            <button class="chip" data-v="fast" type="button">Энергично</button>
-          </div></div>
-        <div class="fld"><h2>Переходы — отметь нужные</h2><div class="chips" id="trans"></div></div>
-        <div class="fld"><h2>Эффекты поверх кадра</h2><div class="chips" id="ovfx"></div></div>
-        <div class="fld">
-          <label class="l" for="fxAmt">Сила эффектов: <span id="fxVal"></span></label>
-          <input type="range" id="fxAmt" min="0" max="100" step="5">
-          <label class="tog"><input type="checkbox" id="kb"> Плавный наезд камеры внутри кадра</label>
-          <label class="tog"><input type="checkbox" id="pulse"> Подрагивание кадра в каждый удар</label>
-          <label class="tog"><input type="checkbox" id="ramp"> Менять скорость: короткие кадры быстрее, длинные медленнее</label>
-        </div>
-        <div class="fld"><h2>Цвет</h2><div class="cards" id="looks"></div></div>
-      </div>
-
-      <div class="pane" id="p-text" hidden>
-        <div class="row"><button class="btn" id="idea" type="button">Готовая заготовка</button><button class="btn" id="noText" type="button">Без текста</button></div>
-        <div class="fld">
-          <label class="l" for="tHook">Хук — первые 2 секунды. Слово в *звёздочках* будет цветным</label>
-          <input type="text" id="tHook" maxlength="70">
-        </div>
-        <div class="fld">
-          <label class="l" for="tLines">Подписи по ходу ролика, каждая с новой строки</label>
-          <textarea id="tLines"></textarea>
-        </div>
-        <div class="fld" id="capBox" hidden>
-          <h2>Подписи</h2>
-          <div class="chips" id="capModes">
-            <button class="chip" data-v="clip" type="button">К каждому кадру</button>
-            <button class="chip" data-v="list" type="button">Общим списком</button>
-          </div>
-          <div class="fld" id="capList"></div>
-        </div>
-        <div class="fld">
-          <label class="l" for="tCta">Финал — призыв</label>
-          <input type="text" id="tCta" maxlength="60">
-        </div>
-        <div class="fld">
-          <label class="l" for="tPrice">Цена или оффер в финале</label>
-          <input type="text" id="tPrice" maxlength="24" placeholder="от 45 000 ₽">
-        </div>
-        <div class="fld">
-          <label class="l" for="tHandle">Твой ник или название мастерской</label>
-          <input type="text" id="tHandle" maxlength="30" placeholder="@masterskaya">
-        </div>
-        <div class="fld"><h2>Шрифт</h2><div class="chips" id="fonts"></div></div>
-        <div class="fld"><h2>Оформление</h2>
-          <div class="chips" id="tstyles">
-            <button class="chip" data-v="udar" type="button">Обводка</button>
-            <button class="chip" data-v="plashka" type="button">Плашки</button>
-            <button class="chip" data-v="neon" type="button">Неон</button>
-            <button class="chip" data-v="ten" type="button">Тень</button>
-          </div>
-        </div>
-        <div class="fld"><h2>Размер</h2>
-          <div class="chips" id="tsizes">
-            <button class="chip" data-v="0.8" type="button">Мельче</button>
-            <button class="chip" data-v="1" type="button">Обычный</button>
-            <button class="chip" data-v="1.2" type="button">Крупнее</button>
-          </div>
-        </div>
-        <div class="fld"><h2>Появление хука</h2>
-          <div class="chips" id="anims">
-            <button class="chip" data-v="words" type="button">По слову в бит</button>
-            <button class="chip" data-v="whole" type="button">Сразу целиком</button>
-          </div>
-        </div>
-        <div class="fld"><h2>Цвет акцента</h2><div class="sw" id="accents"></div></div>
-      </div>
-
-      <div class="pane" id="p-export" hidden>
-        <div class="fld">
-          <h2>Качество</h2>
-          <div class="chips" id="quals">
-            <button class="chip" data-v="1080" type="button">1080×1920</button>
-            <button class="chip" data-v="720" type="button">720×1280, если тормозит</button>
-          </div>
-        </div>
-        <div class="fld">
-          <h2>Формат кадра</h2>
-          <div class="chips" id="fmts">
-            <button class="chip" data-v="9:16" type="button">9:16 Reels</button>
-            <button class="chip" data-v="4:5" type="button">4:5 лента</button>
-            <button class="chip" data-v="1:1" type="button">1:1 квадрат</button>
-            <button class="chip" data-v="16:9" type="button">16:9 широкий</button>
-          </div>
-        </div>
-        <button class="btn hot" id="exportBtn" type="button">Собрать ролик</button>
-        <p class="status" id="expStatus"></p>
-        <p class="hint">Ролик записывается в реальном времени: 15 секунд ролика — 15 секунд сборки. Не сворачивай страницу и не блокируй экран, пока идёт запись.</p>
-        <div class="fld result" id="result" hidden>
-          <video id="resVideo" controls playsinline></video>
-          <button class="btn hot" id="saveBtn" type="button">Сохранить видео</button>
-          <p class="status" id="saveStatus"></p>
+  <div class="overlay" id="s-export" hidden>
+    <div class="bar gut"><span class="ib"></span><h1 class="ttl">Сохранить ролик</h1><button class="ib" id="exClose" type="button" aria-label="Закрыть"></button></div>
+    <div class="ovbody gut">
+      <div class="fld"><h2>Качество</h2><div class="chips" id="quals">
+        <button class="chip" data-v="1080" type="button">1080p</button><button class="chip" data-v="720" type="button">720p, если тормозит</button></div></div>
+      <button class="btn hot" id="exGo" type="button">Записать ролик</button>
+      <div class="pbar"><b id="exBar"></b></div>
+      <p class="status" id="exStatus"></p>
+      <p class="hint">Ролик записывается в реальном времени: 15 секунд ролика — 15 секунд записи. Не сворачивай окно, пока идёт запись.</p>
+      <div class="fld result" id="result" hidden>
+        <video id="resVideo" controls playsinline></video>
+        <button class="btn hot" id="saveBtn" type="button">Сохранить видео</button>
+        <p class="status" id="saveStatus"></p>
+        <div class="fld" id="resCreditBox" hidden>
+          <h2>Подпись об авторе музыки — вставь в описание</h2>
           <p class="hint sel" id="resCredit"></p>
+          <button class="btn" id="copyCredit" type="button">Скопировать подпись</button>
         </div>
       </div>
     </div>
   </div>
+  <div id="toast" hidden></div>
 </div>
 <div id="vpool" aria-hidden="true"></div>
 

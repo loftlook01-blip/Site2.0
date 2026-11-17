@@ -1,7 +1,7 @@
 'use strict';
-// Музыка: загрузка треков из папки music/, синтезатор, список треков на экране.
+// Музыка: загрузка треков из папки music/, синтезатор, прослушивание.
 
-/* ---------- библиотека: треки собираются синтезатором ---------- */
+/* ---------- музыка ---------- */
 const CH=[[0,3,7],[-4,0,3],[3,7,10],[-2,2,5]];
 const TRACKS={
   phonk:{name:'Фонк',mood:'Жёстко, дрифт',bpm:130,beats:80,intro:8,root:46.25,ch:[[0,3,7],[0,3,7],[-4,0,3],[-2,2,5]],k:[0,1.5,2.5],c:[1,3],hat:.5,roll:1,bass:'808',duck:.5,
@@ -81,46 +81,61 @@ async function renderTrack(d){
   }
   return o.startRendering();
 }
-// Готовые файлы лежат в папке music/. Если приложение открыто двойным кликом (file://), браузер не даёт их читать.
+
+// Треки лежат в папке music/: .mp3 для сайта, .js — для запуска двойным кликом (браузер не даёт читать файлы из папки, а скрипты грузит)
 const trackFiles=new WeakSet();
+function b64buf(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer}
+function scriptTrack(id){return new Promise((ok,no)=>{const T=window.ISKRA_TRACKS=window.ISKRA_TRACKS||{};if(T[id])return ok(T[id]);
+  const s=document.createElement('script');s.src='music/'+id+'.js';s.onload=()=>{s.remove();T[id]?ok(T[id]):no(new Error('empty'))};s.onerror=()=>{s.remove();no(new Error('noscript'))};document.head.appendChild(s)})}
 async function trackFile(id){
-  if(location.protocol==='file:')return null;
-  try{const r=await fetch('music/'+id+'.mp3');if(!r.ok)return null;const ab=await r.arrayBuffer();audio();
-    const buf=await new Promise((ok,no)=>{const p=actx.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)});trackFiles.add(buf);return buf}
+  try{let ab;
+    if(location.protocol==='file:'){const d=await scriptTrack(id);delete window.ISKRA_TRACKS[id];ab=b64buf(d)}
+    else{const r=await fetch('music/'+id+'.mp3');if(!r.ok)return null;ab=await r.arrayBuffer()}
+    const buf=await decode(ab);trackFiles.add(buf);return buf}
   catch(e){return null}
 }
 function normalize(buf){let pk=0;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++){const v=x[i]<0?-x[i]:x[i];if(v>pk)pk=v}}
   if(pk>0){const g=.89/pk;for(let c=0;c<buf.numberOfChannels;c++){const x=buf.getChannelData(c);for(let i=0;i<x.length;i++)x[i]*=g}}return buf}
-// auto=true: трек выбран не руками (запуск, сценарий) — если файла нет, молча берём синтезатор
-async function selectTrack(id,play,auto){
+let ownName='';
+function trackName(){const l=libItem(S.track);return l?`${l.t} — ${l.a}`:TRACKS[S.track]?TRACKS[S.track].name+' — синтезатор':S.track==='own'?ownName||'Свой трек':''}
+function mstatus(t,err){const m=$('#mStatus');m.textContent=t||'';m.className='status'+(err?' err':'')}
+// opts.play: 'preview' — послушать трек на экране музыки, 'full' — сразу ролик; opts.auto — трек выбран не руками, без файла молча берём синтезатор
+async function selectTrack(id,opts={}){
   const lib=libItem(id),d=TRACKS[id];if(!lib&&!d)return;const name=lib?lib.t:d.name;
-  const st=$('#audioStatus');st.className='status';st.textContent='Загружаю трек «'+name+'»…';const my=++trackReq;
+  mstatus('Загружаю «'+name+'»…');const my=++trackReq;
   try{
     let job=trackCache.get(id);
     if(!job){job=trackFile(id).then(b=>b||(d?renderTrack(d):Promise.reject(new Error('nofile')))).then(normalize);trackCache.set(id,job);job.catch(()=>trackCache.delete(id))}
     const buf=await job;if(my!==trackReq)return;
     stopAll();buffer=buf;
-    if(lib){A=analyze(buf,lib.bpm);S.startMode=A.drop!=null&&A.drop<16?'pre':'intro';S.mcat=lib.cat;   // дроп далеко от начала фрагмента — стартуем с начала
-      st.textContent=`«${lib.t}» — ${lib.a}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):''}`}
+    const keepMode=S.startMode;
+    if(lib){A=analyze(buf,lib.bpm);S.startMode=A.drop!=null&&A.drop<16?'pre':'intro'}
     else{A=analyze(buf);const PP=60/d.bpm;let ph=0;
       if(trackFiles.has(buf)){ph=A.first%PP;if(ph>PP/2)ph-=PP;if(ph<-.01||ph>.09)ph=.012;ph=Math.max(0,ph)}
-      A.period=PP;A.bpm=d.bpm;A.first=ph;A.intro=ph;A.drop=ph+d.intro*PP;S.mcat='synth';
-      if(S.startMode==='manual'||S.startMode==='intro')S.startMode='pre';
-      st.textContent=`«${d.name}»: ${d.bpm} уд/мин, дроп на ${fmt(A.drop)}`}
-    S.track=id;save();ui();
-    if(play)start(false);else refresh();
+      A.period=PP;A.bpm=d.bpm;A.first=ph;A.intro=ph;A.drop=ph+d.intro*PP;if(S.startMode==='manual'||S.startMode==='intro')S.startMode='pre'}
+    if(opts.keep)S.startMode=keepMode;
+    S.track=id;save();mstatus(`${Math.round(A.bpm)} уд/мин${A.drop!=null?' · дроп на '+fmt(A.drop):''}`);
+    drawTracks();updTop();
+    if(opts.play==='preview')previewMusic();else if(opts.play==='full')start(false,0);else refresh();
   }catch(e){
     if(my!==trackReq)return;
-    if(lib&&auto)return selectTrack('phonk',play);
-    st.className='status err';
-    st.textContent=!lib?'Не получилось собрать трек в этом браузере. Выбери свой файл.':location.protocol==='file:'?'Треки авторов открываются, когда приложение запущено с сайта или через файл «Запуск». Сейчас работает раздел «Синтезатор» и свой трек.':'Не получилось загрузить трек. Проверь интернет и нажми ещё раз.';
+    if(lib&&opts.auto)return selectTrack('phonk',opts);
+    mstatus(!lib?'Не получилось собрать трек в этом браузере. Выбери свой файл.':'Не получилось загрузить трек. Если приложение открыто из папки, проверь, что рядом лежит папка music.',true);
   }
 }
+async function loadOwn(file){
+  mstatus('Слушаю трек и ищу бит…');
+  try{const buf=await decode(await file.arrayBuffer());await sleep(20);++trackReq;stopAll();buffer=buf;A=analyze(buf);S.track='own';ownName=file.name.replace(/\.[^.]+$/,'');
+    S.startMode=A.drop!=null?'pre':'intro';save();mstatus(`${ownName}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):''}`);drawTracks();updTop();previewMusic()}
+  catch(e){mstatus('Не получилось прочитать этот файл. Попробуй MP3, M4A или WAV.',true)}
+}
 function credit(){const x=libItem(S.track);return x?`Music: "${x.t}" by ${x.a} (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License`:''}
-function drawTracks(){
-  const box=$('#mlist');box.textContent='';
-  const rows=S.mcat==='synth'?Object.keys(TRACKS).map(id=>({id,t:TRACKS[id].name,sub:TRACKS[id].mood+' · '+TRACKS[id].bpm+' уд/мин'})):LIB.filter(x=>x.cat===S.mcat).map(x=>({id:x.id,t:x.t,sub:x.a+' · '+x.bpm+' уд/мин · '+fmt(x.len)}));
-  for(const r of rows){const b=document.createElement('button');b.type='button';b.className='trk';b.dataset.v=r.id;b.setAttribute('aria-pressed',S.track===r.id);
-    const n=document.createElement('b');n.textContent=r.t;const d=document.createElement('span');d.textContent=r.sub;b.append(n,d);b.onclick=()=>selectTrack(r.id,true);box.appendChild(b)}
-  const c=credit();$('#creditBox').hidden=!c;$('#creditText').textContent=c;
+// прослушивание на экране музыки: только звук, с того места, откуда начнётся ролик
+let pvNode=null,pvId='';
+function stopPreview(){if(pvNode){try{pvNode.stop()}catch(e){}pvNode=null}pvId='';drawTracks()}
+function previewMusic(){
+  stopPreview();if(!buffer)return;unlock();const w=windowFor();
+  pvNode=actx.createBufferSource();pvNode.buffer=buffer;const g=actx.createGain();pvNode.connect(g);g.connect(actx.destination);
+  const now=actx.currentTime+.05,len=Math.min(15,w.dur);g.gain.setValueAtTime(1,now+len-.6);g.gain.linearRampToValueAtTime(0,now+len);
+  pvNode.start(now,w.start,len);pvId=S.track;const n=pvNode;n.onended=()=>{if(pvNode===n){pvNode=null;pvId='';drawTracks()}};drawTracks();
 }

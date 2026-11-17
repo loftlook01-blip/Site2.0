@@ -1,28 +1,8 @@
 'use strict';
-// Таймлайн: раскладка склеек по битам, правка кадров, текст на экране, отрисовка кадра.
+// Таймлайн: раскладка склеек по битам, умный монтаж, текст на экране, отрисовка кадра с эффектами.
 
 /* ---------- таймлайн ---------- */
-let TL=null,OV={},OVsig='',selSeg=-1,segBtns=[];
-function drawSegs(){
-  const box=$('#segs');box.textContent='';segBtns=[];
-  TL.segs.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='seg'+(OV[i]?' ed':'');b.style.flexGrow=s.beats;b.textContent=TL.pool.indexOf(s.clip)+1;
-    b.setAttribute('aria-pressed',i===selSeg);b.setAttribute('aria-label','Кадр '+(i+1)+', клип '+(TL.pool.indexOf(s.clip)+1));b.onclick=()=>openSeg(i);box.appendChild(b);segBtns.push(b)});
-  $('#segEd').hidden=selSeg<0;
-}
-function fillSegEd(){
-  if(selSeg<0||!TL.segs[selSeg]){selSeg=-1;$('#segEd').hidden=true;return}
-  const i=selSeg,s=TL.segs[i];$('#segTitle').textContent=`Кадр ${i+1} из ${TL.segs.length} · ${s.len.toFixed(1)} с`;
-  const box=$('#segClips');box.textContent='';
-  TL.pool.forEach((c,j)=>{const b=document.createElement('button');b.type='button';b.className='segclip';b.setAttribute('aria-pressed',c===s.clip);b.setAttribute('aria-label','Поставить клип '+(j+1));
-    const cv=document.createElement('canvas');cv.width=46;cv.height=80;const src=c.thumb||c.img;try{const sw=src.width||src.naturalWidth,sh=src.height||src.naturalHeight,k=Math.max(46/sw,80/sh);cv.getContext('2d').drawImage(src,(46-sw*k)/2,(80-sh*k)/2,sw*k,sh*k)}catch(e){}
-    b.appendChild(cv);b.onclick=()=>{OV[i]={clip:c,pos:null};segApply()};box.appendChild(b)});
-  const r=$('#segPos'),can=s.clip.type==='video'&&s.avail>0.05;r.disabled=!can;r.value=can?Math.round(s.src/s.avail*100):0;
-  $('#segL').disabled=i===0;$('#segR').disabled=i===TL.segs.length-1;
-}
-function segApply(){build();fillSegEd();still()}
-function openSeg(i){if(P.rec)return;if(P.on)stopAll();selSeg=i;segApply()}
-function segSwap(j){const i=selSeg;if(i<0||j<0||j>=TL.segs.length)return;const a=TL.segs[i].clip,b=TL.segs[j].clip,pa=OV[i]?OV[i].pos:null,pb=OV[j]?OV[j].pos:null;
-  OV[i]={clip:b,pos:pb};OV[j]={clip:a,pos:pa};selSeg=j;segApply()}
+let TL=null,OV={},OVsig='',selSeg=-1,marks=[];
 function parseWords(s){const up=!FONTS[S.font].low;return s.trim().split(/\s+/).filter(Boolean).map(w=>{const acc=/^\*.*\*[.,!?…]*$/.test(w);w=w.replace(/\*/g,'');return {t:up?w.toUpperCase():w.charAt(0)+w.slice(1).toLowerCase(),acc}})}
 function font(size){const f=FONTS[S.font];return `${f.w} ${size*(f.k||1)}px "${f.f}","Arial Black",sans-serif`}
 function layout(words,size0,minSize,maxRows){
@@ -38,47 +18,62 @@ function layout(words,size0,minSize,maxRows){
   }
   return {size,rows,lh:size*(S.tstyle==='plashka'?1.3:1.18)};
 }
-function build(){
-  const period=A?A.period:.5,first=A?A.first:0;
-  let dur=S.dur,start=0,drop=null;
+
+// какой кусок трека пойдёт в ролик
+function windowFor(){
+  const period=A?A.period:.5,first=A?A.first:0;let dur=S.dur,start=0,drop=null;
   if(A){
     if(S.startMode==='manual')start=S.start;else if(S.startMode==='drop'&&A.drop!=null)start=A.drop;
     else if(S.startMode==='pre'&&A.drop!=null)start=Math.max(first,A.drop-8*period);else start=A.intro;
     dur=Math.min(dur,A.dur-.2);start=clamp(start,0,Math.max(0,A.dur-dur-.1));
-    start=first+Math.round((start-first)/period)*period;if(start<0)start+=period;
-    drop=A.drop;
+    start=first+Math.round((start-first)/period)*period;if(start<0)start+=period;drop=A.drop;
   }
-  let N=Math.max(4,Math.round(dur/period/4)*4);if(A)while(N>4&&start+N*period>A.dur)N-=4;
-  const P=period;dur=N*P;
-  const st=STYLES[S.style],pm=S.pace==='slow'?2:S.pace==='fast'?.5:1;const dropBeat=drop!=null?Math.round((drop-start)/P):-1;
+  let N=Math.max(4,Math.round(dur/period/4)*4);if(A)while(N>4&&start+N*period>A.dur+.05)N-=4;
+  return {P:period,start,N,dur:N*period,drop};
+}
+function build(){
+  const w=windowFor(),P=w.P,start=w.start,N=w.N,dur=w.dur,drop=w.drop;
+  const st=STYLES[S.style],pm=PACES[S.pace].m,dropBeat=drop!=null?Math.round((drop-start)/P):-1;
   const tr=S.trans.filter(k=>TRANS[k]);if(!tr.length)tr.push('cut');
   const src=clips.filter(c=>!c.bad&&(c.type==='image'?c.w:true));let pool=src.length?src:demo;
   if(S.seed){let z=S.seed>>>0;const r=()=>{z=(z*1664525+1013904223)>>>0;return z/4294967296};pool=pool.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}}
   const segs=[];let pos=0,pi=0,k=0;
   while(pos<N-.01){
-    let len=(dropBeat>0&&pos<dropBeat)?st.pre*Math.max(1,pm):Math.max(.5,st.pat[pi++%st.pat.length]*pm);
+    let len;
+    if(dropBeat>0&&pos<dropBeat)len=st.pre*Math.max(1,pm);
+    else{len=st.pat[pi++%st.pat.length]*pm;
+      // умный монтаж: в громких местах склейки чаще, в тихих — реже
+      if(S.smart&&A){const e=beatE(start+pos*P);if(e>1.2&&len>=2&&S.pace!=='slow')len/=2;else if(e<.65&&len<4)len*=2}
+      len=Math.max(S.pace==='fast'?.5:1,len)}
     if(dropBeat>0&&pos<dropBeat&&pos+len>dropBeat)len=dropBeat-pos;
     if(pos+len>N)len=N-pos;if(N-(pos+len)<1&&N-(pos+len)>0)len=N-pos;
-    const clip=pool[k%pool.length];
-    segs.push({t0:pos*P,len:len*P,beats:len,clip,fx:pos===0?'cut':(dropBeat>0&&Math.abs(pos-dropBeat)<.01)?'drop':tr[(k-1)%tr.length],dir:k%2?1:-1,k});
+    segs.push({t0:pos*P,len:len*P,beats:len,clip:pool[k%pool.length],fx:pos===0?'cut':(dropBeat>0&&Math.abs(pos-dropBeat)<.01)?'drop':tr[(k-1)%tr.length],dir:k%2?1:-1,k,end:pos+len});
     pos+=len;k++;
   }
+  const preDrop=dropBeat>0?segs.find(s=>Math.abs(s.end-dropBeat)<.01):null;
   // ручные правки кадров живут, пока не изменилась сама раскладка
-  const sig=[S.style,S.pace,N,segs.length,S.track,pool.length,S.seed].join('|');if(sig!==OVsig){OVsig=sig;OV={};selSeg=-1}
-  segs.forEach((s,i)=>{const o=OV[i];if(o&&o.clip&&pool.includes(o.clip))s.clip=o.clip});
+  const sig=[S.style,S.pace,S.smart,N,segs.length,S.track,pool.map(c=>c.id).join(','),S.seed,S.startMode,Math.round(start*100)].join('|');
+  if(sig!==OVsig){OVsig=sig;OV={};selSeg=-1}
+  segs.forEach((s,i)=>{const o=OV[i];if(o&&o.cid){const c=clipById(o.cid);if(c&&pool.includes(c))s.clip=c}});
   const uses=new Map();segs.forEach(s=>{const a=uses.get(s.clip)||[];a.push(s);uses.set(s.clip,a)});
   uses.forEach((arr,clip)=>{arr.forEach((s,j)=>{
-    s.rate=1;
-    if(clip.type==='video'){
-      if(S.ramp)s.rate=s.beats<=1?1.35:s.beats>=4?.8:1;
-      const need=s.len*s.rate,avail=Math.max(0,(clip.dur||0)-need-.08);
-      s.src=arr.length>1?avail*j/(arr.length-1):avail*.25;s.avail=avail;
-      const o=OV[s.k];if(o&&o.pos!=null)s.src=avail*o.pos;
-      s.el=clip.els[0];
-    }
+    s.rate=1;if(clip.type!=='video')return;
+    if(S.ramp){s.rate=s.beats<=1?1.3:s.beats>=4?.85:1;if(s===preDrop&&s.len>=P*2)s.rate=.6}
+    const D=clip.dur||0,need=s.len*s.rate,avail=Math.max(0,D-need-.08);s.avail=avail;s.el=clip.els[0];
+    const o=OV[s.k];if(o&&o.pos!=null){s.src=avail*o.pos;return}
+    // каждый показ клипа берёт свою часть клипа, а внутри неё — самый живой момент
+    const z0=avail*j/arr.length,z1=avail*(j+1)/arr.length;
+    if(clip.score&&avail>0){const sc=clip.score,stp=clip.step;let best=z0,bv=-1;
+      for(let t=z0;t<=z1+1e-6;t+=Math.max(.08,(z1-z0)/12)){let sum=0,c=0;for(let u=t;u<t+need;u+=stp){sum+=sc[Math.min(sc.length-1,Math.floor(u/stp))];c++}const m=c?sum/c:0;if(m>bv){bv=m;best=t}}
+      s.src=best}
+    else s.src=arr.length>1?(z0+z1)/2:avail*.25;
   })});
   for(let i=1;i<segs.length;i++){const a=segs[i-1],b=segs[i];
     if(b.el&&a.el===b.el){const c=b.clip;if(!c.els[1])c.els[1]=makeVideo(c.url);b.el=c.els[1]}}
+  // авто-акценты: короткий толчок кадра на самых сильных ударах внутри длинных кадров
+  const acc=[];
+  if(S.smart&&A&&S.pace!=='slow'){const starts=new Set(segs.map(s=>Math.round(s.t0/P*2)));
+    for(let b=1;b<N;b++){if(starts.has(b*2))continue;if(beatS(start+b*P)>1.5)acc.push(b*P)}}
   const hw=parseWords(S.hook);if(hw.length&&!hw.some(w=>w.acc)){let m=0;hw.forEach((w,i)=>{if(w.t.length>hw[m].t.length)m=i});hw[m].acc=true}
   const lines=S.lines.split('\n').map(s=>s.trim()).filter(Boolean);
   const hasEnd=S.cta.trim()||S.price.trim(),ctaB=hasEnd?(N>=16?4:2):0;
@@ -98,9 +93,11 @@ function build(){
     ev.forEach((e,i)=>T.lines.push({a:e.a,b:Math.min(ev[i+1]?ev[i+1].a:Infinity,e.a+Math.max(e.len,2*P),T.ctaT),lay:layout(parseWords(e.tx),66,40,3)}));
   }else if(lines.length&&span>=1){const per=Math.max(1,Math.floor(span/lines.length));
     lines.slice(0,Math.floor(span/per)).forEach((s,i)=>T.lines.push({a:(hookEndB+i*per)*P,b:(hookEndB+(i+1)*per)*P,lay:layout(parseWords(s),66,40,3)}))}
-  TL=T;drawSegs();
-  $('#mBpm').textContent=A?Math.round(A.bpm)+' уд/мин':'—';$('#mCuts').textContent=segs.length;$('#mDur').textContent=dur.toFixed(1)+' с';
+
+  T.acc=acc;T.preDrop=preDrop;TL=T;
+  $('#time').textContent=fmt(P_pos())+' / '+fmt(T.dur);
 }
+const P_pos=()=>Math.min(P.pos,TL?TL.dur:0);
 
 /* ---------- кадр ---------- */
 function drawWord(wd,cx,cy,size,sc,al,forcePl){
@@ -134,11 +131,14 @@ function drawText(t){
     if(T.cta){drawBlock(T.cta,y,()=>({sc:1+.3*Math.pow(1-k,3)+.04*pulse,al:k}));y+=T.cta.rows.length*T.cta.lh/2+T.price?.lh*.75||0}
     if(T.price){const k2=clamp((t-T.ctaT-T.P*.5)/.16);if(k2>0)drawBlock(T.price,T.cta?y:H*.5,()=>({sc:1+.4*Math.pow(1-k2,3),al:k2}),true)}}
 }
+
 function segAt(t){const s=TL.segs;let i=s.length-1;while(i>0&&s[i].t0>t)i--;return i}
+let paint=null;
 function frame(t,textT){
-  const T=TL,seg=T.segs[segAt(t)],tc=Math.max(0,t-seg.t0),L=LOOKS[S.look],k=S.fxAmt/55;
-  const bp=((t%T.P)+T.P)%T.P,isImg=seg.clip.type==='image',prog=tc/seg.len;
-  let z=1.03+(S.kb?(seg.dir>0?prog:1-prog)*(isImg?.12:.05):0)+(S.pulse?.02*k*Math.exp(-bp*10):0),fl=0,dim=0,rgb=.0012,rot=0,sx=0,sy=0,bl=0,bx=0,by=0;
+  const T=TL,seg=T.segs[segAt(t)],tc=Math.max(0,t-seg.t0),L0=LOOKS[S.look]||LOOKS.clean,LC=LOOKS.clean,la=S.lookAmt,k=S.fxAmt/55;
+  const L={};for(const q of ['con','sat','temp','bri','fade','vig','grain','teal'])L[q]=LC[q]+(L0[q]-LC[q])*la;
+  const bp=((t%T.P)+T.P)%T.P,bz=Math.exp(-bp*7),isImg=seg.clip.type==='image',prog=tc/seg.len;
+  let z=1.03+(seg.dir>0?prog:1-prog)*(isImg?.12:.05),fl=0,dim=0,rgb=.0012,rot=0,sx=0,sy=0,bl=0,bx=0,by=0;
   const e=x=>Math.exp(-tc*x);
   switch(seg.fx){
     case 'punch':z+=.13*k*e(9);rot=.025*k*seg.dir*e(9);break;
@@ -152,13 +152,31 @@ function frame(t,textT){
     case 'shake':{const a=.013*k*e(6);sx=a*Math.sin(t*95);sy=a*Math.cos(t*78);z+=.04*k*e(7);break}
     case 'drop':fl=Math.min(.9,.7*k)*e(9);z+=.16*k*e(7);bl=.14*k*e(7);break;
   }
-  if(T.dur-t<.35)dim=Math.max(dim,1-(T.dur-t)/.35);
+  for(const at of T.acc){const d=t-at;if(d>=0&&d<.5){z+=.055*k*Math.exp(-d*10);rgb+=.005*k*Math.exp(-d*12)}}
+  let split=1,mir=0,vhs=0,pr=0,leak=0;
+  const ms=paint?marks.concat([{fx:paint.fx,a:paint.a,b:1e9}]):marks;
+  for(const m of ms){if(t<m.a||t>=m.b)continue;const lt=t-m.a;
+    switch(m.fx){
+      case 'black':if((lt/(T.P/2))%1>=.5)dim=Math.max(dim,.96);break;
+      case 'split':split=Math.floor(lt/T.P)%2?3:2;break;
+      case 'prism':pr=.55+.45*bz;break;
+      case 'zoom':z+=.17*bz;break;
+      case 'stutter':z+=.035*Math.exp(-(lt%(T.P/4))*24);break;
+      case 'flash':fl=Math.max(fl,.75*Math.exp(-bp*12));break;
+      case 'shake':{const a=.022*bz;sx+=a*Math.sin(t*90);sy+=a*Math.cos(t*73);break}
+      case 'rgb':rgb+=.032*bz;break;
+      case 'mirror':mir=1;break;
+      case 'vhs':vhs=1;break;
+      case 'blur':bl=Math.max(bl,.24*bz);break;
+      case 'leak':leak=.6+.4*bz;break;
+    }}
+  const fo=S.fade?1.4:.3;if(T.dur-t<fo)dim=Math.max(dim,1-(T.dur-t)/fo);
   if(gl){
     const src=isImg?seg.clip.img:seg.el,ok=isImg?true:(src&&src.readyState>=2);
     const sw=isImg?seg.clip.w:(src&&src.videoWidth)||seg.clip.w,sh=isImg?seg.clip.h:(src&&src.videoHeight)||seg.clip.h;
     if(ok&&sw&&sh){try{gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,src);frame.sw=sw;frame.sh=sh}catch(err){}}
-    const va=(frame.sw||9)/(frame.sh||16),ca=W/H,fxs=S.fx,bz=Math.exp(-bp*6);
-    gl.uniform1f(U.uAsp,ca);gl.uniform1f(U.uPr,fxs.includes('prism')?.5+.5*bz:0);gl.uniform1f(U.uMir,fxs.includes('mirror')?1:0);gl.uniform1f(U.uVhs,fxs.includes('vhs')?1:0);gl.uniform1f(U.uLeak,fxs.includes('leak')?.6+.4*bz:0);gl.uniform1f(U.uT,t);
+    const va=(frame.sw||9)/(frame.sh||16),ca=W/H;
+    gl.uniform1f(U.uAsp,ca);gl.uniform1f(U.uPr,pr);gl.uniform1f(U.uMir,mir);gl.uniform1f(U.uVhs,vhs);gl.uniform1f(U.uLeak,leak);gl.uniform1f(U.uT,t);gl.uniform1f(U.uSplit,split);
     gl.uniform2f(U.uS,va>ca?ca/va:1,va>ca?1:va/ca);gl.uniform2f(U.uSh,sx,sy);gl.uniform2f(U.uBd,bx,by);gl.uniform1f(U.uZ,z);gl.uniform1f(U.uR,rot);
     gl.uniform1f(U.uFl,fl);gl.uniform1f(U.uDim,dim);gl.uniform1f(U.uRgb,rgb);gl.uniform1f(U.uBl,bl);gl.uniform1f(U.uCon,L.con);gl.uniform1f(U.uSat,L.sat);gl.uniform1f(U.uTemp,L.temp);
     gl.uniform1f(U.uBri,L.bri);gl.uniform1f(U.uFade,L.fade);gl.uniform1f(U.uVig,L.vig);gl.uniform1f(U.uGr,L.grain);gl.uniform1f(U.uTime,t%10);gl.uniform1f(U.uTeal,L.teal);

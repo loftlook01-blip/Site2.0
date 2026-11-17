@@ -25,15 +25,16 @@ async function askAI(text,imgs){
   if(!res.ok)throw {code:res.status===401||res.status===403?'bad_key':'http'};
   const j=await res.json();return JSON.parse(String(j.choices[0].message.content).replace(/^```(json)?|```$/g,'').trim());
 }
+
 async function autoReel(){
   const st=$('#autoStatus');st.className='status';const fail=m=>{st.className='status err';st.textContent=m};stopAll();
   const have=clips.some(c=>!c.bad&&c.w),hint=S.brief.trim();
   if(!have&&!hint)return fail('Сначала добавь нарезки или напиши подсказку, о чём ролик.');
-  if(!sample&&!S.pkey.trim())return fail(window.claude?'Распознавание здесь недоступно. Заполни текст на вкладке «Текст» вручную.':'Впиши ключ Pollinations ниже или открой приложение по ссылке Claude — там распознавание работает без ключа.');
+  if(!sample&&!S.pkey.trim())return fail(window.claude?'Распознавание здесь недоступно. Текст можно вписать в редакторе: «Инструм.» → «Текст».':'Впиши ключ Pollinations выше или открой приложение по ссылке Claude — там распознавание работает без ключа.');
   $('#autoBtn').disabled=true;P.busy=true;clearTimeout(stillT);
   try{
-    let see=have;
-    if(see&&sample){let lim=null;try{lim=await sample.limits()}catch(e){}see=!!(lim&&lim.images);var maxImg=see?lim.images.maxCount:0}
+    let see=have,maxImg=0;
+    if(see&&sample){let lim=null;try{lim=await sample.limits()}catch(e){}see=!!(lim&&lim.images);maxImg=see?lim.images.maxCount:0}
     if(!see&&!hint){$('#autoBtn').disabled=false;P.busy=false;return fail('Здесь нельзя отправить кадры на распознавание. Напиши подсказку, о чём ролик, и нажми ещё раз.')}
     let sheets=[];if(see){st.textContent='Смотрю твои кадры…';sheets=await grabSheets();if(maxImg)sheets=sheets.slice(0,maxImg);see=sheets.length>0}
     st.textContent='Определяю изделие и пишу текст…';
@@ -52,14 +53,13 @@ async function autoReel(){
     if(r.captions&&typeof r.captions==='object')for(const k in r.captions){const c=old[+k-1];if(c&&r.captions[k]){c.cap=String(r.captions[k]).slice(0,40);caps=true}}
     if(Array.isArray(r.order)){const ord=[...new Set(r.order.map(Number))].filter(i=>i>=1&&i<=old.length).map(i=>old[i-1]);for(const c of old)if(!ord.includes(c))ord.push(c);clips=ord}
     const key=SCENS[r.scenario]?r.scenario:'viral',sc=SCENS[key];
-    S.scen=key;S.style=sc.style;S.trans=STYLES[sc.style].tr.slice();S.look=sc.look;S.pace='norm';S.capMode=caps?'clip':'list';
+    S.style=sc.style;S.trans=STYLES[sc.style].tr.slice();S.look=sc.look;S.lookAmt=1;S.pace='norm';S.capMode=caps?'clip':'list';S.seed=0;
     const pm=hint.match(/(?:от\s*)?\d[\d\s.,]*\s?(?:₽|руб\.?|р\.|тыс\.?(?:\s?руб\.?|\s?₽)?)/i);
-    setText({hook:r.hook.slice(0,70),cta:String(r.cta||'').slice(0,60),lines:Array.isArray(r.lines)&&r.lines.length?r.lines.map(String).slice(0,5).join('\n'):S.lines,price:pm?pm[0].trim().slice(0,24):''});
-    drawClips();ui();st.textContent=(see?'Вижу: ':'Тема: ')+String(r.product||'изделие')+'. '+String(r.seen||'')+' Ролик собран — смотри и правь на вкладках.';
-    await selectTrack(sc.track,true,true);
+    Object.assign(S,{hook:r.hook.slice(0,70),cta:String(r.cta||'').slice(0,60),lines:Array.isArray(r.lines)&&r.lines.length?r.lines.map(String).slice(0,5).join('\n'):S.lines,price:pm?pm[0].trim().slice(0,24):''});
+    save();drawPick();st.textContent=(see?'Вижу: ':'Тема: ')+String(r.product||'изделие')+'. '+String(r.seen||'')+' Выбери трек — ролик соберётся.';
+    commit();await selectTrack(sc.track,{auto:true});show('music');
   }catch(e){
-    P.busy=false;const c=e&&e.code;fail(c==='not_granted'?'Ты не разрешил обращаться к Claude. Обнови страницу и разреши, либо заполни текст вручную.':c==='rate_limited'?'Слишком часто. Подожди минуту и нажми ещё раз.':c==='bad_key'?'Ключ Pollinations не подошёл. Проверь его и попробуй снова.':c==='image_rejected'||c==='images_unavailable'?'Кадры не приняли на распознавание. Напиши подсказку и нажми ещё раз.':'Не получилось распознать. Нажми ещё раз или заполни текст вручную.');
-    still();
+    P.busy=false;const c=e&&e.code;fail(c==='not_granted'?'Ты не разрешил обращаться к Claude. Обнови страницу и разреши, либо впиши текст вручную.':c==='rate_limited'?'Слишком часто. Подожди минуту и нажми ещё раз.':c==='bad_key'?'Ключ Pollinations не подошёл. Проверь его и попробуй снова.':c==='image_rejected'||c==='images_unavailable'?'Кадры не приняли на распознавание. Напиши подсказку и нажми ещё раз.':'Не получилось распознать. Нажми ещё раз или впиши текст вручную.');
   }
   $('#autoBtn').disabled=false;
 }

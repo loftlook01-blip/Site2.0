@@ -1,5 +1,5 @@
 'use strict';
-// Звук: включение аудио, поиск темпа и дропа в треке.
+// Звук: включение аудио, поиск темпа, дропа и силы ударов в треке.
 
 /* ---------- звук ---------- */
 let actx=null,gain=null,recDest=null,buffer=null,A=null,srcNode=null,unlocked=false;
@@ -7,7 +7,7 @@ function audio(){
   if(!actx){const C=window.AudioContext||window.webkitAudioContext;actx=new C();gain=actx.createGain();gain.connect(actx.destination)}
   return actx;
 }
-// Телефон даёт звук только после касания; на iPhone ещё и беззвучный режим глушит страницу, если не назвать себя «плеером».
+// Телефон даёт звук только после касания; на iPhone беззвучный режим глушит страницу, если не назвать себя «плеером».
 function unlock(){
   try{
     audio();if(actx.state!=='running'){const p=actx.resume();if(p&&p.catch)p.catch(()=>{})}
@@ -16,7 +16,7 @@ function unlock(){
   }catch(e){}
 }
 ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlock,true));
-
+const decode=ab=>new Promise((ok,no)=>{audio();const p=actx.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)});
 function analyze(buf,hint){
   const sr=buf.sampleRate,n=buf.length,c0=buf.getChannelData(0),c1=buf.numberOfChannels>1?buf.getChannelData(1):null;
   const hop=Math.round(sr/100),F=Math.floor(n/hop),fps=sr/hop;
@@ -48,18 +48,14 @@ function analyze(buf,hint){
   intro=first+Math.max(0,Math.round((intro-first)/period))*period;
   const NB=300,peaks=new Float32Array(NB);for(let f=0;f<F;f++){const b=Math.min(NB-1,Math.floor(f/F*NB));if(eA[f]>peaks[b])peaks[b]=eA[f]}
   for(let b=0;b<NB;b++)peaks[b]/=mx||1;
-  return {bpm:60/period,period,first,drop,intro,dur,peaks};
+  // громкость и сила удара на каждой доле — по ним умный монтаж решает, где резать чаще и где толкнуть кадр
+  const nb=Math.max(1,Math.floor((dur-first)/period)+1),bE=new Float32Array(nb),bS=new Float32Array(nb);
+  for(let i=0;i<nb;i++){const t=first+i*period;bE[i]=mean(t,t+period);let m=0;const f0=Math.round(t*fps);for(let f=f0-3;f<=f0+3;f++)if(f>=0&&f<F&&o[f]>m)m=o[f];bS[i]=m}
+  const med=a=>{const s=Array.from(a).sort((x,y)=>x-y);return s[s.length>>1]||1};const mE=med(bE),mS=med(bS);
+  for(let i=0;i<nb;i++){bE[i]/=mE||1;bS[i]/=mS||1}
+  return {bpm:60/period,period,first,drop,intro,dur,peaks,bE,bS};
 }
+
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
-async function loadAudio(ab,name){
-  const st=$('#audioStatus');st.className='status';st.textContent='Слушаю трек и ищу бит…';
-  try{
-    audio();
-    const buf=await new Promise((ok,no)=>{const p=actx.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)});
-    await sleep(30);
-    ++trackReq;stopAll();buffer=buf;A=analyze(buf);S.track='own';
-    if(S.startMode==='manual'||(S.startMode!=='intro'&&A.drop==null)||(S.startMode==='intro'&&A.drop!=null))S.startMode=A.drop!=null?'pre':'intro';
-    st.textContent=`${name}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):', яркого дропа нет — начинаю с начала'}`;
-    ui();refresh();
-  }catch(e){st.className='status err';st.textContent='Не получилось прочитать этот файл. Попробуй MP3, M4A или WAV.'}
-}
+const beatIdx=t=>A&&A.bE?clamp(Math.round((t-A.first)/A.period),0,A.bE.length-1):0;
+const beatE=t=>A&&A.bE?A.bE[beatIdx(t)]:1, beatS=t=>A&&A.bS?A.bS[beatIdx(t)]:1;

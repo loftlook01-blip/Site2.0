@@ -1,10 +1,13 @@
 'use strict';
-// Настройки: стили монтажа, переходы, цветокоры, шрифты, каталог музыки, заготовки текста, сценарии. Меняй смело — это данные.
+// Настройки: ритмы склеек, переходы, эффекты «Правки», фильтры, шрифты, каталог музыки, заготовки текста, сценарии. Меняй смело — это данные.
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
+const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ---------- настройки ---------- */
+// Ритм склеек: pat — длины кадров в ударах, pre — длина кадров до дропа, tr — переходы по умолчанию
 const STYLES={
   power:{name:'Мощно',desc:'Склейка почти на каждый удар',pat:[1,1,2,1,1,2,1,1,1,1,2],pre:2,tr:['punch','flash','zoomblur','whip']},
   shop:{name:'Цех',desc:'Резко и по-рабочему',pat:[2,1,1,2,1,1,2,2],pre:2,tr:['punch','glitch','flash','slideup']},
@@ -12,6 +15,13 @@ const STYLES={
   smooth:{name:'Плавно',desc:'Длинные спокойные кадры',pat:[4,4,2,2,4],pre:4,tr:['fade','zoomblur']}
 };
 const TRANS={punch:'Удар-зум',zoomblur:'Наезд с размытием',flash:'Вспышка',whip:'Рывок вбок',slideup:'Рывок вверх',spin:'Поворот',glitch:'Глитч',fade:'Из темноты',shake:'Тряска',cut:'Чистая склейка'};
+const PACES={slow:{n:'Медленно',m:2},norm:{n:'Средне',m:1},fast:{n:'Энергично',m:.5}};
+// Эффекты «Правки»: кладутся на ролик удержанием кнопки во время просмотра
+const EFFECTS={
+  black:{n:'Затемнение',c:'#ff3b6b'},split:{n:'Дубль',c:'#ff8a1f'},prism:{n:'Призма',c:'#b46bff'},zoom:{n:'Масштаб',c:'#4fe3ff'},
+  stutter:{n:'Повтор',c:'#d7ff3a'},flash:{n:'Вспышки',c:'#f2f2f2'},shake:{n:'Тряска',c:'#ffb020'},rgb:{n:'Глитч',c:'#3bff9a'},
+  mirror:{n:'Зеркало',c:'#6fa8ff'},vhs:{n:'VHS',c:'#ff6fd8'},blur:{n:'Размытие',c:'#9aa7b4'},leak:{n:'Засветка',c:'#ffcf6b'}
+};
 const LOOKS={
   juicy:{name:'Сочный',desc:'Яркий контраст',con:1.18,sat:1.28,temp:.01,bri:.0,fade:0,vig:.35,grain:.03,teal:.3},
   loft:{name:'Лофт',desc:'Тёплое дерево',con:1.12,sat:1.08,temp:.045,bri:.0,fade:.06,vig:.45,grain:.05,teal:.5},
@@ -26,14 +36,15 @@ const LOOKS={
   fresh:{name:'Свежий',desc:'Светлый и чистый',con:1.06,sat:1.1,temp:-.015,bri:.035,fade:.02,vig:.15,grain:.02,teal:.1},
   clean:{name:'Чистый',desc:'Без обработки',con:1,sat:1,temp:0,bri:0,fade:0,vig:0,grain:0,teal:0}
 };
+
 const FONTS={
   mont:{n:'Монтсеррат',f:'Montserrat',w:900},unb:{n:'Анбаундед',f:'Unbounded',w:900,k:.82},russo:{n:'Руссо',f:'Russo One',w:400},
   osw:{n:'Освальд',f:'Oswald',w:700,k:1.12},dela:{n:'Дела Готик',f:'Dela Gothic One',w:400,k:.86},tek:{n:'Тектур',f:'Tektur',w:800},
   rub:{n:'Рубик Моно',f:'Rubik Mono One',w:400,k:.78},cav:{n:'От руки',f:'Caveat',w:700,k:1.3,low:true},pac:{n:'Вывеска',f:'Pacifico',w:400,low:true}
 };
-const OVFX={prism:'Призма',mirror:'Зеркало',vhs:'VHS',leak:'Засветка'};
+
 const FMT={'9:16':9/16,'4:5':4/5,'1:1':1,'16:9':16/9};
-// Библиотека: фрагменты треков, лежат в папке music/. bpm — темп из каталога автора.
+const LENS=[[10,'Snap'],[15,'Сторис'],[20,'TikTok'],[30,'Популярн.'],[45,'Лента'],[60,'Полный']];
 const CATS={energy:'Энергия',groove:'Грув',beat:'Бит',chill:'Эстетика',rock:'Рок',synth:'Синтезатор'};
 const LIB=[{"id":"werq","t":"Werq","a":"Kevin MacLeod","cat":"energy","bpm":125,"len":64},
   {"id":"raving-energy","t":"Raving Energy","a":"Kevin MacLeod","cat":"energy","bpm":122,"len":64},
@@ -80,9 +91,11 @@ const SCENS={
   price:{name:'Цена и факты',desc:'Характеристики и стоимость',style:'premium',look:'cinema',idea:5,track:'galactic-rap',price:'от 45 000 ₽'},
   viral:{name:'Вирусная нарезка',desc:'Максимум энергии',style:'power',look:'juicy',idea:3,track:'raving-energy',price:''}
 };
-const S={style:'power',look:'juicy',dur:15,startMode:'pre',start:0,ramp:true,tstyle:'udar',accent:ACCENTS[0],
-  hook:IDEAS[0].hook,lines:IDEAS[0].lines,cta:IDEAS[0].cta,handle:'',price:'',q:1080,idea:0,
-  trans:STYLES.power.tr.slice(),fxAmt:55,pulse:false,kb:true,pace:'norm',font:'mont',tsize:1,anim:'words',track:'raving-energy',brief:'',scen:'',capMode:'list',pkey:'',fmt:'9:16',fx:[],mcat:'energy',seed:0};
-try{Object.assign(S,JSON.parse(localStorage.getItem('iskra2')||'{}'))}catch(e){}
-if(!FONTS[S.font])S.font='mont';if(!Array.isArray(S.fx))S.fx=[];if(!FMT[S.fmt])S.fmt='9:16';if(!CATS[S.mcat])S.mcat='energy';if(!Array.isArray(S.trans))S.trans=STYLES.power.tr.slice();
-const save=()=>{try{localStorage.setItem('iskra2',JSON.stringify(S))}catch(e){}};
+
+const S={style:'power',look:'juicy',lookAmt:1,dur:15,startMode:'pre',start:0,ramp:true,smart:true,fade:false,tstyle:'udar',accent:ACCENTS[0],
+  hook:IDEAS[0].hook,lines:IDEAS[0].lines,cta:IDEAS[0].cta,handle:'',price:'',q:1080,idea:0,pulse:false,
+  trans:STYLES.power.tr.slice(),fxAmt:55,pace:'norm',font:'mont',tsize:1,anim:'words',track:'raving-energy',brief:'',capMode:'list',pkey:'',fmt:'9:16',mcat:'energy',seed:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem('iskra5')||'{}'))}catch(e){}
+if(!FONTS[S.font])S.font='mont';if(!FMT[S.fmt])S.fmt='9:16';if(!CATS[S.mcat])S.mcat='energy';if(!Array.isArray(S.trans))S.trans=STYLES.power.tr.slice();
+if(!LOOKS[S.look])S.look='juicy';if(!PACES[S.pace])S.pace='norm';if(!STYLES[S.style])S.style='power';
+const save=()=>{try{localStorage.setItem('iskra5',JSON.stringify(S))}catch(e){}};

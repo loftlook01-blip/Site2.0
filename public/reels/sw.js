@@ -1,6 +1,6 @@
 // Работа без интернета: при первом открытии с сайта файлы приложения сохраняются на устройстве.
 // После любых правок в коде поменяй номер версии — иначе телефон будет показывать старую копию.
-const VERSION='iskra-v7';
+const VERSION='iskra-v9';
 const FILES=[
  "css/app.css",
  "fonts/caveat-cyrillic-700-normal.woff2",
@@ -37,6 +37,7 @@ const FILES=[
  "js/auto.js",
  "js/clips.js",
  "js/config.js",
+ "js/drafts.js",
  "js/export.js",
  "js/gl.js",
  "js/player.js",

@@ -10,7 +10,7 @@ const ICON={
   media:'<rect x="3" y="6" width="13" height="13" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v11"/>',edit:'<circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="M8.6 8.6 20 18M8.6 15.4 20 6"/>',
   len:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',seg:'<path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4"/>',pace:'<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
   trans:'<rect x="3" y="3" width="11" height="11" rx="2"/><rect x="10" y="10" width="11" height="11" rx="2"/>',fade:'<path d="M3 6v12h18"/><path d="M3 6l18 12"/>',
-  fmt:'<path d="M6 2v16h16M2 6h16v16"/>',text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
+  fmt:'<path d="M6 2v16h16M2 6h16v16"/>',brand:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>',text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
   auto:'<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'
 };
 const ic=(n,fill)=>`<svg viewBox="0 0 24 24" aria-hidden="true"${fill?' class="f"':''}>${ICON[n]}</svg>`;
@@ -20,7 +20,7 @@ let screen='home',pickFromEditor=false;
 function show(id){
   if(id!=='music')stopPreview();if(id!=='edit'&&P.on&&!P.rec)stopAll();
   $$('.scr').forEach(s=>s.hidden=s.id!=='s-'+id);screen=id;
-  if(id==='home')$('#hCont').hidden=!clips.length;
+  if(id==='home'){$('#hCont').hidden=!clips.length;saveProject().then(drawDrafts,drawDrafts)}
   if(id==='pick'){$('#pkNext').textContent=pickFromEditor?'Готово':'Далее';drawPick()}
   if(id==='music'){drawCats();drawTracks()}
   if(id==='edit'){requestAnimationFrame(()=>{fitFrame();updTop();updPanels();refresh()})}
@@ -33,7 +33,7 @@ function drawPick(){
     const d=el('div','ptile');d.appendChild(c.thumb?thumbOf(c.thumb,c.thumb.width,c.thumb.height):el('canvas'));
     d.appendChild(el('span','n',i+1));d.appendChild(el('span','d',c.bad?'не читается':c.type==='image'?'фото':c.dur?fmt(c.dur):'…'));
     const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Убрать кадр '+(i+1));
-    x.onclick=()=>{stopAll();const [r]=clips.splice(i,1);if(r.els)r.els.forEach(v=>{v.removeAttribute('src');v.load();v.remove()});URL.revokeObjectURL(r.url);drawPick();commit();refresh()};d.appendChild(x);
+    x.onclick=()=>{stopAll();const [r]=clips.splice(i,1);if(proj)DB.del('files',proj.id+':'+r.id).catch(()=>{});if(r.els)r.els.forEach(v=>{v.removeAttribute('src');v.load();v.remove()});URL.revokeObjectURL(r.url);drawPick();commit();refresh()};d.appendChild(x);
     if(i>0){const up=el('button','up','←');up.type='button';up.setAttribute('aria-label','Сдвинуть кадр вперёд');
       up.onclick=()=>{stopAll();[clips[i-1],clips[i]]=[clips[i],clips[i-1]];S.seed=0;drawPick();commit();refresh()};d.appendChild(up)}
     g.appendChild(d);
@@ -63,7 +63,7 @@ function updPlay(){$('#play').innerHTML=ic(P.on?'pause':'play',1);$('#play').set
 // --- инструменты
 const TOOLS={
   media:{n:'Медиа'},edit:{n:'Править',tall:1},len:{n:'Длина'},seg:{n:'Сегмент'},pace:{n:'Настрой',tall:1},trans:{n:'Переходы',tall:1},
-  fade:{n:'Затухание'},fmt:{n:'Формат'},text:{n:'Текст',tall:1},auto:{n:'ИИ-текст',tall:1}
+  fade:{n:'Затухание'},fmt:{n:'Формат'},text:{n:'Текст',tall:1},brand:{n:'Бренд',tall:1},auto:{n:'ИИ-текст',tall:1}
 };
 let sheetTool=null,sheetSnap=null,ptab='tools';
 const SHEET_REDRAW={};
@@ -153,8 +153,24 @@ const SHEETS={
     const os=el('div','fld');os.appendChild(el('h2',null,'Оформление'));os.appendChild(chipRow([['udar','Обводка'],['plashka','Плашки'],['neon','Неон'],['ten','Тень']],()=>S.tstyle,v=>{S.tstyle=v;reb()}));
     os.appendChild(chipRow([[.8,'Мельче'],[1,'Обычный'],[1.2,'Крупнее']],()=>S.tsize,v=>{S.tsize=+v;reb()}));
     os.appendChild(chipRow([['words','Хук по слову в бит'],['whole','Хук сразу целиком']],()=>S.anim,v=>{S.anim=v;reb()}));
+    os.appendChild(el('h2',null,'Анимация'));os.appendChild(chipRow([['pop','Удар'],['slide','Выезд'],['bounce','Прыжок'],['type','Печать']],()=>S.tfx,v=>{S.tfx=v;P.pos=0;reb()}));
+    os.appendChild(el('h2',null,'Где хук'));os.appendChild(chipRow([['top','Сверху'],['center','По центру'],['bottom','Снизу']],()=>S.tpos,v=>{S.tpos=v;reb()}));
     const sw=el('div','sw');ACCENTS.forEach(a=>{const x=el('button');x.type='button';x.style.background=a;x.dataset.v=a;x.setAttribute('aria-label','Цвет акцента '+a);x.setAttribute('aria-pressed',S.accent===a);
       x.onclick=()=>{S.accent=a;[...sw.children].forEach(y=>y.setAttribute('aria-pressed',y===x));reb()};sw.appendChild(x)});os.appendChild(sw);b.appendChild(os);
+  },
+  brand(b){
+    b.appendChild(el('p','hint','Логотип мастерской хранится в браузере и подходит ко всем роликам. Лучше PNG с прозрачным фоном.'));
+    const r=el('div','row');r.style.alignItems='center';const pv=el('div','logoprev');pv.id='logoPrev';if(logoImg)pv.style.backgroundImage=`url("${logoImg.src}")`;
+    const lb=el('label','btn',logoImg?'Заменить логотип':'Загрузить логотип');const inp=el('input');inp.type='file';inp.accept='image/*';inp.hidden=true;lb.appendChild(inp);
+    inp.onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;DB.put('kv','logo',f).catch(dbFail);setLogo(f);S.logoOn=true;lb.firstChild.textContent='Заменить логотип';reb()};
+    const rm=el('button','btn','Убрать');rm.type='button';rm.onclick=()=>{DB.del('kv','logo').catch(()=>{});setLogo(null);pv.style.backgroundImage='';lb.firstChild.textContent='Загрузить логотип'};
+    r.append(pv,lb,rm);b.appendChild(r);
+    b.appendChild(tog('Логотип в углу всего ролика',()=>S.logoOn,v=>{S.logoOn=v;reb()}));
+    b.appendChild(chipRow([['tl','↖ Слева сверху'],['tr','↗ Справа сверху'],['bl','↙ Слева снизу'],['br','↘ Справа снизу']],()=>S.logoPos,v=>{S.logoPos=v;S.logoOn=true;reb()}));
+    b.appendChild(chipRow([[.7,'Меньше'],[1,'Обычный'],[1.4,'Больше']],()=>S.logoSize,v=>{S.logoSize=+v;reb()}));
+    b.appendChild(el('h2',null,'Финальная заставка'));
+    b.appendChild(tog('В конце: логотип, призыв, цена и контакты на затемнённом фоне',()=>S.endCard,v=>{S.endCard=v;build();P.pos=TL.ctaT<TL.dur?TL.ctaT+TL.P*1.5:P.pos;reb()}));
+    const ph=txt('tPhone','phone',40,'+7 900 000-00-00 · Архангельск');b.appendChild(fld('Контакты на заставке',ph));
   },
   auto(b){
     b.appendChild(el('p','hint','Напиши, что на видео, — Claude придумает хук, подписи и призыв. Полный авто-ролик по кадрам — на экране «Медиа».'));
@@ -215,7 +231,7 @@ function loadFont(k){const f=FONTS[k];if(document.fonts&&document.fonts.load)doc
 // --- привязка кнопок
 $('#pkBack').innerHTML=ic('back');$('#muBack').innerHTML=ic('back');$('#edHome').innerHTML=ic('home');$('#edSave').innerHTML=ic('save')+'Сохранить';$('#edMusic').innerHTML=ic('music');
 $('#undo').innerHTML=ic('undo');$('#redo').innerHTML=ic('redo');$('#shuffle').innerHTML=ic('shuffle');$('#sX').innerHTML=ic('x');$('#sOk').innerHTML=ic('ok');$('#exClose').innerHTML=ic('x');updPlay();
-$('#hNew').onclick=()=>{stopAll();clips.forEach(c=>{if(c.els)c.els.forEach(v=>{v.removeAttribute('src');v.load();v.remove()});URL.revokeObjectURL(c.url)});clips=[];marks=[];OV={};OVsig='';S.seed=0;HIST.stack=[];HIST.i=-1;commit();pickFromEditor=false;show('pick')};
+$('#hNew').onclick=async()=>{stopAll();await saveProject();clearClips();proj=null;S.seed=0;HIST.stack=[];HIST.i=-1;commit();pickFromEditor=false;show('pick')};
 $('#hCont').onclick=()=>show('edit');
 $('#pkBack').onclick=()=>show(pickFromEditor?'edit':'home');
 $('#pkNext').onclick=()=>{if(!clips.length){toast('Добавь хотя бы одно видео или фото',true);return}if(pickFromEditor){pickFromEditor=false;show('edit');return}show('music')};
@@ -238,11 +254,12 @@ $$('#quals [data-v]').forEach(b=>b.onclick=()=>{S.q=+b.dataset.v;save();pressAll
 $('#copyCredit').onclick=()=>{const t=credit(),st=$('#saveStatus');try{navigator.clipboard.writeText(t).then(()=>{st.textContent='Подпись скопирована.'},()=>{st.textContent='Выдели подпись и скопируй вручную.'})}catch(e){st.textContent='Выдели подпись и скопируй вручную.'}};
 document.addEventListener('keydown',e=>{if(screen!=='edit'||e.target.closest('input,textarea,.fx'))return;if(e.code==='Space'){e.preventDefault();$('#play').click()}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&P.on&&!P.rec)stopAll();if(document.hidden)stopPreview()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&P.on&&!P.rec)stopAll();if(document.hidden){stopPreview();saveProject()}});
 window.addEventListener('resize',()=>{fitFrame();drawProg()});
 $('#muNext').addEventListener('click',()=>{$('#muNext').textContent='Далее'});
 
 initGL();setSize(previewQ());makeDemo();drawTools();commit();show('home');
+DB.get('kv','logo').then(b=>{if(b)setLogo(b)}).catch(()=>{});
 selectTrack(libItem(S.track)||TRACKS[S.track]?S.track:'raving-energy',{auto:true});
 if(document.fonts&&document.fonts.load)document.fonts.load('900 40px Montserrat','АБВ ABC').then(()=>{makeDemo();refresh();loadFont(S.font)}).catch(()=>{});
 

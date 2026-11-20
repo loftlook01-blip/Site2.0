@@ -44,7 +44,10 @@ function loop(){
   if(sm&&seg.el&&t>=0){const q=T.P/4,idx=Math.floor((tt-sm.a)/q);
     if(idx!==P.stIdx){if(P.stIdx<0||P.stSeg!==i||idx%4===0){P.stBase=seg.el.currentTime;P.stSeg=i}else{try{seg.el.currentTime=P.stBase}catch(e){}}P.stIdx=idx}}
   else P.stIdx=-1;
-  P.pos=tt;frame(tt);drawProg();$('#time').textContent=fmt(tt)+' / '+fmt(T.dur);
+  P.pos=tt;frame(tt);drawProg();
+  // пока «Бумеранг» крутит снятые кадры, само видео стоит; после — идёт дальше
+  if(seg.el&&B.done&&B.key.endsWith('|'+seg.k)&&boomAt(tt)){if(!seg.el.paused){seg.el.pause();B.pausedEl=seg.el}}
+  else if(B.pausedEl){const v=B.pausedEl;B.pausedEl=null;if(v===seg.el){const pp=v.play();if(pp&&pp.catch)pp.catch(()=>{})}}$('#time').textContent=fmt(tt)+' / '+fmt(T.dur);
   if(P.rec)$('#exBar').style.width=(tt/T.dur*100)+'%';
   P.raf=requestAnimationFrame(loop);
 }
@@ -123,11 +126,11 @@ function addMark(m){
 
 /* ---------- отмена и повтор ---------- */
 const EDIT_KEYS=['look','lookAmt','pace','style','smart','ramp','dur','fmt','track','trans','fxAmt','fade','startMode','start','seed',
-  'hook','lines','cta','price','handle','font','tstyle','tsize','anim','accent','capMode'];
+  'hook','lines','cta','price','handle','font','tstyle','tsize','anim','accent','capMode','tpos','tfx','logoOn','logoPos','logoSize','endCard','phone'];
 const HIST={stack:[],i:-1};
 function snapState(){const s={};for(const k of EDIT_KEYS)s[k]=S[k];const caps={};clips.forEach(c=>{caps[c.id]=c.cap||''});
   return JSON.stringify({S:s,marks,OV,OVsig,order:clips.map(c=>c.id),caps})}
-function commit(){const s=snapState();if(HIST.stack[HIST.i]===s)return;HIST.stack=HIST.stack.slice(0,HIST.i+1);HIST.stack.push(s);if(HIST.stack.length>80)HIST.stack.shift();HIST.i=HIST.stack.length-1;save();updUndo()}
+function commit(){const s=snapState();if(HIST.stack[HIST.i]===s)return;HIST.stack=HIST.stack.slice(0,HIST.i+1);HIST.stack.push(s);if(HIST.stack.length>80)HIST.stack.shift();HIST.i=HIST.stack.length-1;save();updUndo();scheduleSave()}
 async function restore(js){
   const o=JSON.parse(js),trackChanged=o.S.track!==S.track,fmtChanged=o.S.fmt!==S.fmt;Object.assign(S,o.S);marks=o.marks;OV=o.OV;OVsig=o.OVsig;
   const ord=o.order;clips.sort((a,b)=>{const i=ord.indexOf(a.id),j=ord.indexOf(b.id);return (i<0?1e9:i)-(j<0?1e9:j)});clips.forEach(c=>{if(o.caps[c.id]!=null)c.cap=o.caps[c.id]});

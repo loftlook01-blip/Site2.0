@@ -20,7 +20,7 @@ const PACES={slow:{n:'Медленно',m:2},norm:{n:'Средне',m:1},fast:{n
 const EFFECTS={
   black:{n:'Затемнение',c:'#ff3b6b'},split:{n:'Дубль',c:'#ff8a1f'},prism:{n:'Призма',c:'#b46bff'},zoom:{n:'Масштаб',c:'#4fe3ff'},
   stutter:{n:'Повтор',c:'#d7ff3a'},flash:{n:'Вспышки',c:'#f2f2f2'},shake:{n:'Тряска',c:'#ffb020'},rgb:{n:'Глитч',c:'#3bff9a'},
-  mirror:{n:'Зеркало',c:'#6fa8ff'},vhs:{n:'VHS',c:'#ff6fd8'},blur:{n:'Размытие',c:'#9aa7b4'},leak:{n:'Засветка',c:'#ffcf6b'}
+  mirror:{n:'Зеркало',c:'#6fa8ff'},vhs:{n:'VHS',c:'#ff6fd8'},blur:{n:'Размытие',c:'#9aa7b4'},leak:{n:'Засветка',c:'#ffcf6b'},boom:{n:'Бумеранг',c:'#ff4fa3'}
 };
 const LOOKS={
   juicy:{name:'Сочный',desc:'Яркий контраст',con:1.18,sat:1.28,temp:.01,bri:.0,fade:0,vig:.35,grain:.03,teal:.3},
@@ -94,7 +94,8 @@ const SCENS={
 
 const S={style:'power',look:'juicy',lookAmt:1,dur:15,startMode:'pre',start:0,ramp:true,smart:true,fade:false,tstyle:'udar',accent:ACCENTS[0],
   hook:IDEAS[0].hook,lines:IDEAS[0].lines,cta:IDEAS[0].cta,handle:'',price:'',q:1080,idea:0,pulse:false,
-  trans:STYLES.power.tr.slice(),fxAmt:55,pace:'norm',font:'mont',tsize:1,anim:'words',track:'raving-energy',brief:'',capMode:'list',pkey:'',fmt:'9:16',mcat:'energy',seed:0};
+  trans:STYLES.power.tr.slice(),fxAmt:55,pace:'norm',font:'mont',tsize:1,anim:'words',track:'raving-energy',brief:'',capMode:'list',pkey:'',fmt:'9:16',mcat:'energy',seed:0,
+  tpos:'center',tfx:'pop',logoOn:false,logoPos:'tr',logoSize:1,endCard:false,phone:''};
 try{Object.assign(S,JSON.parse(localStorage.getItem('iskra5')||'{}'))}catch(e){}
 if(!FONTS[S.font])S.font='mont';if(!FMT[S.fmt])S.fmt='9:16';if(!CATS[S.mcat])S.mcat='energy';if(!Array.isArray(S.trans))S.trans=STYLES.power.tr.slice();
 if(!LOOKS[S.look])S.look='juicy';if(!PACES[S.pace])S.pace='norm';if(!STYLES[S.style])S.style='power';

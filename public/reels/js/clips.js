@@ -27,9 +27,14 @@ function makeVideo(url){const v=document.createElement('video');v.muted=true;v.d
   v.addEventListener('seeked',()=>{if(!P.on&&!P.busy)still()});$('#vpool').appendChild(v);v.load();return v}
 function thumbOf(src,w,h,tw=90,th=160){const cv=document.createElement('canvas');cv.width=tw;cv.height=th;if(w&&h){const k=Math.max(tw/w,th/h);try{cv.getContext('2d').drawImage(src,(tw-w*k)/2,(th-h*k)/2,w*k,h*k)}catch(e){}}return cv}
 function addFiles(files){
-  for(const f of files){
-    const url=URL.createObjectURL(f),id='c'+(++clipSeq);
-    if(f.type.startsWith('image/')){
+  if(!proj)newProject();
+  for(const f of files){const id='c'+(++clipSeq);makeClip(f,f.type,id);storeFile(id,f,f.name)}
+  drawPick();refresh();commit();
+}
+function makeClip(f,type,id){
+  {
+    const url=URL.createObjectURL(f);
+    if((type||'').startsWith('image/')){
       const img=new Image();const c={id,type:'image',url,img,w:0,h:0,dur:0,cap:''};
       img.onload=()=>{c.w=img.naturalWidth;c.h=img.naturalHeight;c.thumb=thumbOf(img,c.w,c.h);c.strip=[c.thumb];drawPick();refresh()};img.src=url;clips.push(c);
     }else{
@@ -40,7 +45,6 @@ function addFiles(files){
       clips.push(c);
     }
   }
-  drawPick();refresh();commit();
 }
 // Анализ нарезок: где в клипе больше движения и резкости — оттуда монтаж берёт кадры. Заодно делает ленту миниатюр для «Править».
 const anaQ=[];let anaBusy=false,anaDone=0;

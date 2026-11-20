@@ -53,7 +53,7 @@ label.l{font-size:13px;color:var(--mute)}
 .sel{user-select:all;-webkit-user-select:all}
 
 /* старт */
-#s-home{justify-content:center;gap:28px;text-align:center}
+#s-home{justify-content:center;gap:26px;text-align:center;overflow-y:auto;padding-block:24px}
 .logo{font-size:34px;line-height:1.05}
 .tag{color:var(--mute);margin:8px 0 0}
 .steps{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:var(--mute);font-size:13px}
@@ -148,6 +148,14 @@ ol.how{margin:0;padding-left:20px;color:var(--mute);font-size:13px;display:flex;
 .sw button[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
 .caprow{display:flex;gap:8px;align-items:center}.caprow span{flex:none;width:22px;text-align:center;color:var(--mute)}
 
+/* черновики */
+.drafts{width:100%;max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:8px;text-align:left}
+.draft{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px}
+.draft img,.draft .ph{flex:none;width:44px;height:78px;border-radius:7px;object-fit:cover;background:var(--panel2)}
+.draft .tx{flex:1;min-width:0;cursor:pointer}
+.draft b{display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.draft span{font-size:12.5px;color:var(--mute)}
+.logoprev{width:96px;height:96px;border-radius:12px;background:var(--panel2) center/contain no-repeat;border:1px solid var(--line)}
 /* сохранение */
 .overlay{position:absolute;inset:0;background:var(--bg);z-index:20;display:flex;flex-direction:column}
 .ovbody{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-block:6px 24px}

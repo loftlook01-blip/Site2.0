@@ -123,10 +123,10 @@ async function selectTrack(id,opts={}){
     mstatus(!lib?'Не получилось собрать трек в этом браузере. Выбери свой файл.':'Не получилось загрузить трек. Если приложение открыто из папки, проверь, что рядом лежит папка music.',true);
   }
 }
-async function loadOwn(file){
-  mstatus('Слушаю трек и ищу бит…');
+async function loadOwn(file,fromDraft){
+  mstatus('Слушаю трек и ищу бит…');if(!fromDraft){if(!proj)newProject();storeFile('own',file,file.name)}
   try{const buf=await decode(await file.arrayBuffer());await sleep(20);++trackReq;stopAll();buffer=buf;A=analyze(buf);S.track='own';ownName=file.name.replace(/\.[^.]+$/,'');
-    S.startMode=A.drop!=null?'pre':'intro';save();mstatus(`${ownName}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):''}`);drawTracks();updTop();previewMusic()}
+    if(!fromDraft)S.startMode=A.drop!=null?'pre':'intro';save();mstatus(`${ownName}: ${Math.round(A.bpm)} уд/мин${A.drop!=null?', дроп на '+fmt(A.drop):''}`);drawTracks();updTop();if(!fromDraft)previewMusic();else refresh()}
   catch(e){mstatus('Не получилось прочитать этот файл. Попробуй MP3, M4A или WAV.',true)}
 }
 function credit(){const x=libItem(S.track);return x?`Music: "${x.t}" by ${x.a} (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License`:''}
